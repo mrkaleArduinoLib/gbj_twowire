@@ -1,0 +1,29 @@
+{
+  "name": "gbjTwoWire",
+  "keywords": "twowire, wire, i2c, iic",
+  "description": "The library contains common constants and methods used in every custom library for sensors communicating on the two wire (I2C) bus.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkaleArduinoLib/gbj_twowire.git"
+  },
+  "version": "1.0.0",
+  "frameworks": "arduino",
+  "platforms": [
+     {
+       "name": "atmelavr",
+       "title": "Atmel AVR"
+     },
+     {
+       "name": "atmelsam",
+       "title": "Atmel SAM"
+     },
+     {
+       "name": "espressif32",
+       "title": "Espressif 32"
+     },
+     {
+       "name": "espressif8266",
+       "title": "Espressif 8266"
+     }
+   ]
+}
