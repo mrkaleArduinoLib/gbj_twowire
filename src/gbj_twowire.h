@@ -21,7 +21,7 @@
  */
 #ifndef GBJ_TWOWIRE_H
 #define GBJ_TWOWIRE_H
-#define GBJ_TWOWIRE_VERSION "GBJ_TWOWIRE_1.0.0"
+#define GBJ_TWOWIRE_VERSION "GBJ_TWOWIRE 1.0.0"
 
 #if defined(__AVR__)
   #if ARDUINO >= 100

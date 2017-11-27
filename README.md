@@ -136,7 +136,7 @@ The method returns a flag whether the recent operation on the two wire bus was s
 None
 
 #### Returns
-None
+Flag about successful processing of the recent operation on the bus.
 
 #### See also
 [getLastResult()](#getLastResult)
@@ -158,7 +158,7 @@ The method returns a flag whether the recent operation on the two wire bus faile
 None
 
 #### Returns
-None
+Flag about failing of the recent operation on the bus.
 
 #### See also
 [getLastResult()](#getLastResult)
@@ -183,7 +183,7 @@ The method sets new address of a device to the instance object.
   - *Default value*: none
 
 #### Returns
-Result codes defined by some of the macro [constants](#Constants). In fact, it determines whether the new address is correct and a device communicate on that address.
+Result code defined by some of the macro [constants](#Constants). In fact, it determines whether the new address is correct and a device communicate on that address.
 
 #### Example
 ```cpp
