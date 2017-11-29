@@ -24,25 +24,29 @@ Library embraces and provides common methods used at every application working w
 - **TwoWire**: I2C system library loaded from the file *Wire.h*.
 
 
-<a id="Constants"></a>
+<a id="constants"></a>
 ## Constants
-- **GBJ_TWOWIRE_VERSION**: Name and semantic version of the library.
-- **CLOCK_SPEED_100KHZ**: Bus clock speed 100 kHz.
-- **CLOCK_SPEED_400KHZ**: Bus clock speed 400 kHz.
-- **GBJ_TWOWIRE_SUCCESS**: Result code for successful processing.
+- **GBJ\_TWOWIRE\_VERSION**: Name and semantic version of the library.
+- **GBJ\_TWOWIRE\_ADDRESS\_BAD**: Virtual value for a bad device address.
+- **GBJ\_TWOWIRE\_ADDRESS\_MIN**: Minimal valid address of a device.
+- **GBJ\_TWOWIRE\_ADDRESS\_MAX**: Maximal valid address of a device.
+- **CLOCK\_SPEED\_100KHZ**: Bus clock speed 100 kHz.
+- **CLOCK\_SPEED\_400KHZ**: Bus clock speed 400 kHz.
+- **GBJ\_TWOWIRE\_SUCCESS**: Result code for successful processing.
+- **GBJ\_TWOWIRE\_ERR\_ADDRESS**: Platform specific error code at bad address
 
 ### Arduino error codes
-- **GBJ_TWOWIRE_ERR_BUFFER**: Data too long to fit in transmit buffer.
-- **GBJ_TWOWIRE_ERR_NACK_ADDR**: Received NACK on transmit of address.
-- **GBJ_TWOWIRE_ERR_NACK_DATA**: Received NACK on transmit of data.
-- **GBJ_TWOWIRE_ERR_OTHER**:  Other error.
+- **GBJ\_TWOWIRE\_ERR\_BUFFER**: Data too long to fit in transmit buffer.
+- **GBJ\_TWOWIRE\_ERR\_NACK\_ADDR**: Received NACK on transmit of address.
+- **GBJ\_TWOWIRE\_ERR\_NACK\_DATA**: Received NACK on transmit of data.
+- **GBJ\_TWOWIRE\_ERR\_OTHER**:  Other error.
 
 ### Particle error codes
-- **GBJ_TWOWIRE_ERR_BUSY**: Busy timeout upon entering endTransmission().
-- **GBJ_TWOWIRE_ERR_START**: START bit generation timeout.
-- **GBJ_TWOWIRE_ERR_END**: End of address transmission timeout.
-- **GBJ_TWOWIRE_ERR_TRANSFER**: Data byte transfer timeout.
-- **GBJ_TWOWIRE_ERR_TIMEOUT**: Data byte transfer succeeded, busy timeout immediately after.
+- **GBJ\_TWOWIRE\_ERR\_BUSY**: Busy timeout upon entering endTransmission().
+- **GBJ\_TWOWIRE\_ERR\_START**: START bit generation timeout.
+- **GBJ\_TWOWIRE\_ERR\_END**: End of address transmission timeout.
+- **GBJ\_TWOWIRE\_ERR\_TRANSFER**: Data byte transfer timeout.
+- **GBJ\_TWOWIRE\_ERR\_TIMEOUT**: Data byte transfer succeeded, busy timeout immediately after.
 
 Remaining constants are listed in the library include file. They are used mostly internally as function codes of the sensor.
 
@@ -72,6 +76,7 @@ Remaining constants are listed in the library include file. They are used mostly
 #### Description
 Constructor `gbj_twowire()` just creates a class instance object.
 Destructor `~gbj_twowire()` just releases the two wire bus.
+- If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
     gbj_twowire();
@@ -105,7 +110,7 @@ None
 <a id="initLastResult"></a>
 ## initLastResult()
 #### Description
-The method sets internal status of recent processing on the two wire bus to success with value of macro [GBJ\_TWOWIRE\_SUCCESS](#Constants). It is usually called right before any operation on the bus in order to reset the internal status.
+The method sets internal status of recent processing on the two wire bus to success with value of macro [GBJ\_TWOWIRE\_SUCCESS](#constants). It is usually called right before any operation on the bus in order to reset the internal status.
 
 #### Syntax
     void initLastResult();
@@ -179,11 +184,11 @@ The method sets new address of a device to the instance object.
 #### Parameters
 <a id="prm_address"></a>
 - **address**: The address value of a device, with which the microcontroller is going to communicate.
-  - *Valid values*: 0 ~ 127 (0x00 ~ 0x7F). Only 7-bit addresses are allowed on two wire bus. Practically the range is 3 ~ 119 (0x03 ~ 0x77), while addresses outside this range are reserved for special purposes.
+  - *Valid values*: [GBJ\_TWOWIRE\_ADDRESS\_MIN ~ GBJ\_TWOWIRE\_ADDRESS\_MAX](#constants). Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two wire bus. Practically the range is 3 ~ 119 (0x03 ~ 0x77), while addresses outside this range are reserved for special purposes.
   - *Default value*: none
 
 #### Returns
-Result code defined by some of the macro [constants](#Constants). In fact, it determines whether the new address is correct and a device communicate on that address.
+Result code defined by some of the macro [constants](#constants). In fact, it determines whether the new address is correct and a device communicate on that address.
 
 #### Example
 ```cpp
@@ -235,8 +240,8 @@ The method sets the internal status of recent processing on the two wire bus to 
 #### Parameters
 <a id="prm_lastResult"></a>
 - **lastResult**: Desired result code that should be set as a last result code.
-  - *Valid values*: One of macro for [result codes](#Constants).
-  - *Default value*: [GBJ\_TWOWIRE\_SUCCESS](#Constants)
+  - *Valid values*: One of macro for [result codes](#constants).
+  - *Default value*: [GBJ\_TWOWIRE\_SUCCESS](#constants)
 
 #### Returns
 New (actual) result code of recent operation on two wire bus.
@@ -301,7 +306,7 @@ The method returns a result code of the recent operation on the two wire bus. It
 None
 
 #### Returns
-Current result code. It is one of expected [result codes](#Constants).
+Current result code. It is one of expected [result codes](#constants).
 
 #### Example
 ```cpp

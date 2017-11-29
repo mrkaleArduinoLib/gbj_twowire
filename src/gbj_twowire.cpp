@@ -29,17 +29,35 @@ bool gbj_twowire::setBusStop(bool busStop)
   return getBusStop();
 }
 
+
 uint8_t gbj_twowire::setAddress(uint8_t address)
 {
+  initLastResult();
+  // Invalid address
+  if (address < GBJ_TWOWIRE_ADDRESS_MIN || address > GBJ_TWOWIRE_ADDRESS_MAX)
+  {
+    _address = GBJ_TWOWIRE_ADDRESS_BAD;
+    setLastResult(GBJ_TWOWIRE_ERR_ADDRESS);
+    return getLastResult();
+  }
+  // No change in valid address
+  if (address == getAddress()) return getLastResult();
+  // Set changed address
   _address = address;
-  return checkAddress();
+  if (!getBusStop()) end();
+  initBus();
+  beginTransmission(getAddress());
+  setLastResult(endTransmission(getBusStop()));
+  return getLastResult();
 }
+
 
 uint8_t gbj_twowire::setLastResult(uint8_t lastResult)
 {
   _lastResult = lastResult;
   return getLastResult();
 }
+
 
 void gbj_twowire::initLastResult()
 {
@@ -58,7 +76,7 @@ bool    gbj_twowire::isError()        { return !isSuccess(); }
 
 
 //------------------------------------------------------------------------------
-// Private methods
+// Protected methods
 //------------------------------------------------------------------------------
 
 // Wait for delay period expiry
@@ -89,20 +107,4 @@ void gbj_twowire::initBus()
     begin();
   }
 #endif
-}
-
-
-// Check two wire bus address
-uint8_t gbj_twowire::checkAddress()
-{
-  initLastResult();
-  if (_address > 0)
-  {
-    // Release bus at keep alive
-    if (!getBusStop()) end();
-    initBus();
-    beginTransmission(_address);
-    setLastResult(endTransmission(getBusStop()));
-  }
-  return getLastResult();
 }

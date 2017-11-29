@@ -35,8 +35,13 @@
   #include <Particle.h>
 #endif
 
-// Result codes
-#define GBJ_TWOWIRE_SUCCESS             0
+
+// Addresses
+#define GBJ_TWOWIRE_ADDRESS_BAD         0xFF  // Value for bad address
+#define GBJ_TWOWIRE_ADDRESS_MIN         0x03  // Minimal valid address
+#define GBJ_TWOWIRE_ADDRESS_MAX         0x77  // Maximal valid address
+
+#define GBJ_TWOWIRE_SUCCESS             0     // Result code
 
 // Error codes
 #ifndef GBJ_TWOWIRE_ERRORS_H
@@ -47,6 +52,8 @@
     #define GBJ_TWOWIRE_ERR_NACK_ADDR   2   // Received NACK on transmit of address
     #define GBJ_TWOWIRE_ERR_NACK_DATA   3   // Received NACK on transmit of data
     #define GBJ_TWOWIRE_ERR_OTHER       4   // Other error
+    // Custom errors
+    #define GBJ_TWOWIRE_ERR_ADDRESS     GBJ_TWOWIRE_ERR_NACK_ADDR
     // Arduino clock speed
     #define CLOCK_SPEED_100KHZ          100000L
     #define CLOCK_SPEED_400KHZ          400000L
@@ -57,6 +64,8 @@
     #define GBJ_TWOWIRE_ERR_END         3   // End of address transmission timeout
     #define GBJ_TWOWIRE_ERR_TRANSFER    4   // Data byte transfer timeout
     #define GBJ_TWOWIRE_ERR_TIMEOUT     5   // Data byte transfer succeeded, busy timeout immediately after
+    // Custom errors
+    #define GBJ_TWOWIRE_ERR_ADDRESS     GBJ_TWOWIRE_ERR_START
   #endif
 #endif
 
@@ -108,7 +117,7 @@ public:
 
 
 //------------------------------------------------------------------------------
-// Public setters
+// Public setters - they usually return result code.
 //------------------------------------------------------------------------------
   uint8_t setAddress(uint8_t address);
   bool    setBusStop(bool busStop);
@@ -176,21 +185,6 @@ protected:
   RETURN: none
 */
   void initBus();
-
-
-/*
-  Check two wire address stored in the class instance.
-
-  DESCRIPTION:
-  The method starts transmission on two wire bus at stored address and checks
-  whether the ending transmission is successful.
-
-  PARAMETERS: none
-
-  RETURN:
-  Result code.
-*/
-  uint8_t checkAddress();
 
 };
 
