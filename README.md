@@ -184,7 +184,7 @@ The method sets new address of a device to the instance object.
 #### Parameters
 <a id="prm_address"></a>
 - **address**: The address value of a device, with which the microcontroller is going to communicate.
-  - *Valid values*: [GBJ\_TWOWIRE\_ADDRESS\_MIN ~ GBJ\_TWOWIRE\_ADDRESS\_MAX](#constants). Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two wire bus. Practically the range is 3 ~ 119 (0x03 ~ 0x77), while addresses outside this range are reserved for special purposes.
+  - *Valid values*: [GBJ\_TWOWIRE\_ADDRESS\_MIN ~ GBJ\_TWOWIRE\_ADDRESS\_MAX](#constants). Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two wire bus. Practically the range is from 3 (0x03), in special cases from 1 (0x01) to 119 (0x77), while addresses outside this range are reserved for special purposes.
   - *Default value*: none
 
 #### Returns

@@ -38,7 +38,7 @@
 
 // Addresses
 #define GBJ_TWOWIRE_ADDRESS_BAD         0xFF  // Value for bad address
-#define GBJ_TWOWIRE_ADDRESS_MIN         0x03  // Minimal valid address
+#define GBJ_TWOWIRE_ADDRESS_MIN         0x01  // Minimal valid address
 #define GBJ_TWOWIRE_ADDRESS_MAX         0x77  // Maximal valid address
 
 #define GBJ_TWOWIRE_SUCCESS             0     // Result code

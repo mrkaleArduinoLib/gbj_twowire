@@ -8,22 +8,5 @@
   },
   "version": "1.0.0",
   "frameworks": "arduino",
-  "platforms": [
-     {
-       "name": "atmelavr",
-       "title": "Atmel AVR"
-     },
-     {
-       "name": "atmelsam",
-       "title": "Atmel SAM"
-     },
-     {
-       "name": "espressif32",
-       "title": "Espressif 32"
-     },
-     {
-       "name": "espressif8266",
-       "title": "Espressif 8266"
-     }
-   ]
+  "platforms": ["atmelavr", "atmelsam", "espressif8266", "espressif32"]
 }
