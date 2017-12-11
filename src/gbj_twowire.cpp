@@ -1,5 +1,6 @@
 #include "gbj_twowire.h"
 
+
 // Constructor
 gbj_twowire::gbj_twowire(){}
 
@@ -78,6 +79,7 @@ bool    gbj_twowire::isError()        { return !isSuccess(); }
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
+
 
 // Wait for delay period expiry
 void gbj_twowire::wait(uint32_t delay)
