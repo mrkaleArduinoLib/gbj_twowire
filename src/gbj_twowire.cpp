@@ -21,6 +21,30 @@ void gbj_twowire::release()
 }
 
 
+uint8_t gbj_twowire::writeByte(uint8_t data)
+{
+  #if ARDUINO >= 100
+    return write(data);
+  #else
+    return send(data);
+  #endif
+}
+
+
+uint8_t gbj_twowire::writeInt(uint16_t data)
+{
+  uint8_t quantity = 2;
+  uint8_t  buffer[quantity];
+  buffer[0] = (uint8_t) (data >> 8);
+  buffer[1] = (uint8_t) (data & 0x00FF);
+  #if ARDUINO >= 100
+    return write(buffer, quantity);
+  #else
+    return send(buffer, quantity);
+  #endif
+}
+
+
 //------------------------------------------------------------------------------
 // Setters
 //------------------------------------------------------------------------------

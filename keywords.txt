@@ -20,7 +20,8 @@ getAddress	KEYWORD2
 getLastResult	KEYWORD2
 isSuccess	KEYWORD2
 isError	KEYWORD2
-
+writeByte	KEYWORD2
+writeInt	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

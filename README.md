@@ -59,6 +59,8 @@ Remaining constants are listed in the library include file. They are used mostly
 - [initLastResult()](#initLastResult)
 - [isSuccess()](#isSuccess)
 - [isError()](#isError)
+- [writeByte()](#writeByte)
+- [writeInt()](#writeInt)
 
 #### Setters
 - [setAddress()](#setAddress)
@@ -340,5 +342,53 @@ else
 [setLastResult()](#setLastResult)
 
 [initLastResult()](#initLastResult)
+
+[Back to interface](#interface)
+
+
+<a id="writeByte"></a>
+## writeByte()
+#### Description
+The method writes one byte with respect to new and old Arduino system two-wire library.
+
+#### Syntax
+    uint8_t writeByte(uint8_t data);
+
+#### Parameters
+<a id="prm_data"></a>
+- **data**: Data byte to be written.
+  - *Valid values*: non-negative integer 0 ~ 255
+  - *Default value*: none
+
+#### Returns
+Number of transmitted bytes.
+
+#### See also
+[writeInt()](#writeInt)
+
+[Back to interface](#interface)
+
+
+<a id="writeInt"></a>
+## writeInt()
+#### Description
+The method writes one byte with respect to new and old Arduino system two-wire library.
+The method writes two byte integer data with respect to new and old Arduino system two-wire library while starting with the most significant
+byte first, i.e., bytes from left to right.
+
+#### Syntax
+    uint8_t writeInt(uint16_t data);
+
+#### Parameters
+<a id="prm_data"></a>
+- **data**: Integer data to be written.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+#### Returns
+Number of transmitted bytes.
+
+#### See also
+[writeByte()](#writeByte)
 
 [Back to interface](#interface)

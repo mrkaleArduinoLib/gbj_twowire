@@ -70,7 +70,7 @@
 #endif
 
 
-class gbj_twowire : TwoWire
+class gbj_twowire : protected TwoWire
 {
 public:
 //------------------------------------------------------------------------------
@@ -114,6 +114,42 @@ public:
   RETURN: none
 */
   void release();
+
+
+/*
+  Write one byte with respect to new and old Arduino two-wire library.
+
+  DESCRIPTION:
+
+  PARAMETERS:
+  data - Data byte to be written.
+         - Data type: non-negative integer
+         - Default value: none
+         - Limited range: 0 ~ 255
+
+  RETURN:
+  Number of transmitted bytes.
+*/
+  uint8_t writeByte(uint8_t data);
+
+
+/*
+  Write two bytes at once with respect to new and old Arduino two-wire library.
+
+  DESCRIPTION:
+  The method writes two byte integer data to two-wire bus with most significant
+  byte first, i.e., bytes from left to right.
+
+  PARAMETERS:
+  data - Data word to be written.
+         - Data type: non-negative integer
+         - Default value: none
+         - Limited range: 0 ~ 65535
+
+  RETURN:
+  Number of transmitted bytes.
+*/
+  uint8_t writeInt(uint16_t data);
 
 
 //------------------------------------------------------------------------------
