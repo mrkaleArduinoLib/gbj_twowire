@@ -37,7 +37,6 @@
 
 
 // Addresses
-#define GBJ_TWOWIRE_ADDRESS_BAD         0xFF  // Value for bad address
 #define GBJ_TWOWIRE_ADDRESS_MIN         0x01  // Minimal valid address
 #define GBJ_TWOWIRE_ADDRESS_MAX         0x77  // Maximal valid address
 
@@ -87,7 +86,7 @@ public:
 
   RETURN:  object
 */
-  gbj_twowire();
+gbj_twowire();
 
 
 /*
@@ -100,7 +99,7 @@ public:
 
   RETURN:  none
 */
-  ~gbj_twowire();
+~gbj_twowire();
 
 
 /*
@@ -113,35 +112,22 @@ public:
 
   RETURN: none
 */
-  void release();
+void release();
 
 
 /*
-  Write one byte with respect to new and old Arduino two-wire library.
+  Write one or two bytes to the two-wire bus.
 
   DESCRIPTION:
+  The method writes one or two byte integer data to the two-wire bus in respect
+  to the current platform.
+  - If the most significant byte (the first one from the left) is non-zero,
+    the data is written as two subsequent bytes.
+  - If the most significant byte is zero, the data is written as its Least
+    significant byte (the right most one).
 
   PARAMETERS:
-  data - Data byte to be written.
-         - Data type: non-negative integer
-         - Default value: none
-         - Limited range: 0 ~ 255
-
-  RETURN:
-  Number of transmitted bytes.
-*/
-  uint8_t writeByte(uint8_t data);
-
-
-/*
-  Write two bytes at once with respect to new and old Arduino two-wire library.
-
-  DESCRIPTION:
-  The method writes two byte integer data to two-wire bus with most significant
-  byte first, i.e., bytes from left to right.
-
-  PARAMETERS:
-  data - Data word to be written.
+  data - Data word or byte to be written.
          - Data type: non-negative integer
          - Default value: none
          - Limited range: 0 ~ 65535
@@ -149,26 +135,103 @@ public:
   RETURN:
   Number of transmitted bytes.
 */
-  uint8_t writeInt(uint16_t data);
+uint8_t busWrite(uint16_t data);
+
+
+/*
+  Send one or two bytes to the two-wire bus.
+
+  DESCRIPTION:
+  The method sends input data to the two-wire bus as one communication
+  transaction.
+  - The method is overloaded.
+  - In case of two parameters, the first one is considered as a command and
+    second one as the data. In this case the method sends 2 ~ 4 bytes to the bus
+    in one transaction.
+  - In case of one parameter, it is considered as the general data and in fact
+    might be a command or the data. In this case the method sends 1 ~ 2 bytes
+    to the bus in one transaction.
+
+  PARAMETERS:
+  command - Word or byte to be sent in the role of command.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 65535
+
+  data - Word or byte to be sent in the role of data.
+         - Data type: non-negative integer
+         - Default value: none
+         - Limited range: 0 ~ 65535
+
+  RETURN:
+  Result code.
+*/
+uint8_t busSend(uint16_t command, uint16_t data);
+uint8_t busSend(uint16_t data);
+
+
+/*
+  Read one byte from the two-wire bus.
+
+  DESCRIPTION:
+  The method reads one byte from the two-wire bus in respect to the current
+  platform.
+
+  PARAMETERS: none
+
+  RETURN:
+  Data byte read from the bus.
+*/
+uint8_t busRead();
+
+
+/*
+  Read multiple bytes from the two-wire bus.
+
+  DESCRIPTION:
+  The method reads multiple bytes from the two-wire bus and places them to the
+  array defined by an input pointer.
+
+  PARAMETERS:
+  dataArray - Pointer to an array of bytes for storing read data. The array
+              should be enough large for storing all read bytes.
+              - Data type: array of non-negative integer
+              - Default value: none
+              - Limited range: platform specific address space
+
+  bytes - Number of bytes to be read.
+          - Data type: non-negative integer
+          - Default value: none
+          - Limited range: 0 ~ 255
+
+  start - The array index where to start storing read bytes.
+          - Data type: non-negative integer
+          - Default value: 0
+          - Limited range: 0 ~ 255
+
+  RETURN:
+  Result code and read data bytes in the input array at success.
+*/
+uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 
 
 //------------------------------------------------------------------------------
 // Public setters - they usually return result code.
 //------------------------------------------------------------------------------
-  uint8_t setAddress(uint8_t address);
-  bool    setBusStop(bool busStop);
-  uint8_t setLastResult(uint8_t lastResult = GBJ_TWOWIRE_SUCCESS);
-  void    initLastResult();
+uint8_t setAddress(uint8_t address);
+bool    setBusStop(bool busStop);
+uint8_t setLastResult(uint8_t lastResult = GBJ_TWOWIRE_SUCCESS);
+void    initLastResult();
 
 
 //------------------------------------------------------------------------------
 // Public getters
 //------------------------------------------------------------------------------
-  bool     getBusStop();        // Flag about current bus releasing
-  uint8_t  getAddress();        // Current device address
-  uint8_t  getLastResult();     // Result of a recent operation
-  bool     isSuccess();         // Flag about succsssful recent operation
-  bool     isError();           // Flag about erroneous recent operation
+bool     getBusStop();        // Flag about current bus releasing
+uint8_t  getAddress();        // Current device address
+uint8_t  getLastResult();     // Result of a recent operation
+bool     isSuccess();         // Flag about succsssful recent operation
+bool     isError();           // Flag about erroneous recent operation
 
 
 private:
@@ -176,11 +239,11 @@ private:
 // Private attributes
 //------------------------------------------------------------------------------
 #if defined(__AVR__)
-  bool     _busEnabled;   // Flag about bus initialization
+bool     _busEnabled;   // Flag about bus initialization
 #endif
-  bool     _busStop;      // Flag about releasing bus after end of transmission
-  uint8_t  _address;      // Address of the sensor
-  uint8_t  _lastResult;   // Result of a recent operation
+bool     _busStop;      // Flag about releasing bus after end of transmission
+uint8_t  _address;      // Address of the sensor
+uint8_t  _lastResult;   // Result of a recent operation
 
 
 //------------------------------------------------------------------------------
@@ -208,7 +271,7 @@ protected:
 
   RETURN: none
 */
-  void wait(uint32_t delay);
+void wait(uint32_t delay);
 
 /*
   Initialize two wire bus if it is not yet.
@@ -221,7 +284,14 @@ protected:
 
   RETURN: none
 */
-  void initBus();
+void initBus();
+
+
+private:
+//------------------------------------------------------------------------------
+// Private methods
+//------------------------------------------------------------------------------
+uint8_t platformWrite(uint8_t data);
 
 };
 

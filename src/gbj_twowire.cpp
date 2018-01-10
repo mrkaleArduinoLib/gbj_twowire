@@ -21,27 +21,68 @@ void gbj_twowire::release()
 }
 
 
-uint8_t gbj_twowire::writeByte(uint8_t data)
+uint8_t gbj_twowire::busWrite(uint16_t data)
+{
+  uint8_t countByte = 0;
+  uint8_t dataByte;
+  // Write MSB of int if not zero
+  dataByte = (uint8_t) (data >> 8);
+  if (dataByte > 0x00)
+  {
+    countByte += platformWrite(dataByte);
+  }
+  // Write LSB allways
+  dataByte = (uint8_t) (data & 0x00FF);
+  countByte += platformWrite(dataByte);
+  return countByte;
+}
+
+
+uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
+{
+  initBus();
+  beginTransmission(getAddress());
+  busWrite(command);
+  busWrite(data);
+  if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+  return getLastResult();
+}
+
+
+uint8_t gbj_twowire::busSend(uint16_t data)
+{
+  initBus();
+  beginTransmission(getAddress());
+  busWrite(data);
+  if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+  return getLastResult();
+}
+
+
+uint8_t gbj_twowire::busRead()
 {
   #if ARDUINO >= 100
-    return write(data);
+    return read();
   #else
-    return send(data);
+    return receive();
   #endif
 }
 
 
-uint8_t gbj_twowire::writeInt(uint16_t data)
+uint8_t gbj_twowire::busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start)
 {
-  uint8_t quantity = 2;
-  uint8_t  buffer[quantity];
-  buffer[0] = (uint8_t) (data >> 8);
-  buffer[1] = (uint8_t) (data & 0x00FF);
-  #if ARDUINO >= 100
-    return write(buffer, quantity);
-  #else
-    return send(buffer, quantity);
-  #endif
+  initBus();
+  beginTransmission(getAddress());
+  if (requestFrom(getAddress(), bytes, (uint8_t) getBusStop()) > 0 \
+  && available() >= bytes)
+  {
+    for (uint8_t i = 0; i < bytes; i++)
+    {
+      dataArray[i + start] = busRead();
+    }
+  }
+  setLastResult(endTransmission(getBusStop()));
+  return getLastResult();
 }
 
 
@@ -61,11 +102,9 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   // Invalid address
   if (address < GBJ_TWOWIRE_ADDRESS_MIN || address > GBJ_TWOWIRE_ADDRESS_MAX)
   {
-    _address = GBJ_TWOWIRE_ADDRESS_BAD;
-    setLastResult(GBJ_TWOWIRE_ERR_ADDRESS);
-    return getLastResult();
+    return setLastResult(GBJ_TWOWIRE_ERR_ADDRESS);
   }
-  // No change in valid address
+  // No address change
   if (address == getAddress()) return getLastResult();
   // Set changed address
   _address = address;
@@ -133,4 +172,19 @@ void gbj_twowire::initBus()
     begin();
   }
 #endif
+}
+
+
+//------------------------------------------------------------------------------
+// Private methods
+//------------------------------------------------------------------------------
+
+
+uint8_t gbj_twowire::platformWrite(uint8_t data)
+{
+  #if ARDUINO >= 100
+    return write(data);
+  #else
+    return send(data);
+  #endif
 }

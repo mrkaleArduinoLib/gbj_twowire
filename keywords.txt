@@ -20,14 +20,15 @@ getAddress	KEYWORD2
 getLastResult	KEYWORD2
 isSuccess	KEYWORD2
 isError	KEYWORD2
-writeByte	KEYWORD2
-writeInt	KEYWORD2
+busWrite	KEYWORD2
+busSend	KEYWORD2
+busRead	KEYWORD2
+busReceive	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 GBJ_TWOWIRE_VERSION	LITERAL1
-GBJ_TWOWIRE_ADDRESS_BAD	LITERAL1
 GBJ_TWOWIRE_ADDRESS_MIN	LITERAL1
 GBJ_TWOWIRE_ADDRESS_MAX	LITERAL1
 GBJ_TWOWIRE_SUCCESS	LITERAL1

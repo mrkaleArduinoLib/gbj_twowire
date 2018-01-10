@@ -27,7 +27,6 @@ Library embraces and provides common methods used at every application working w
 <a id="constants"></a>
 ## Constants
 - **GBJ\_TWOWIRE\_VERSION**: Name and semantic version of the library.
-- **GBJ\_TWOWIRE\_ADDRESS\_BAD**: Virtual value for a bad device address.
 - **GBJ\_TWOWIRE\_ADDRESS\_MIN**: Minimal valid address of a device.
 - **GBJ\_TWOWIRE\_ADDRESS\_MAX**: Maximal valid address of a device.
 - **CLOCK\_SPEED\_100KHZ**: Bus clock speed 100 kHz.
@@ -59,8 +58,10 @@ Remaining constants are listed in the library include file. They are used mostly
 - [initLastResult()](#initLastResult)
 - [isSuccess()](#isSuccess)
 - [isError()](#isError)
-- [writeByte()](#writeByte)
-- [writeInt()](#writeInt)
+- [busWrite()](#busWrite)
+- [busSend()](#busSend)
+- [busRead()](#busRead)
+- [busReceive()](#busReceive)
 
 #### Setters
 - [setAddress()](#setAddress)
@@ -194,7 +195,8 @@ Result code defined by some of the macro [constants](#constants). In fact, it de
 
 #### Example
 ```cpp
-if (Wire.setAddress(newAddress) == GBJ_TWOWIRE_SUCCESS)
+gbj_twowire Object = gbj_twowire();
+if (Object.setAddress(newAddress) == GBJ_TWOWIRE_SUCCESS)
 {
   Serial.println("Success");
 }
@@ -312,16 +314,17 @@ Current result code. It is one of expected [result codes](#constants).
 
 #### Example
 ```cpp
-Wire.initLastResult();
-Wire.setAddress(newAddress);
-if (Wire.getLastResult() == GBJ_TWOWIRE_SUCCESS)
+gbj_twowire Object = gbj_twowire();
+Object.initLastResult();
+Object.setAddress(newAddress);
+if (Object.getLastResult() == GBJ_TWOWIRE_SUCCESS)
 {
   Serial.println("Success");
 }
 else
 {
   Serial.print("Error: ");
-  switch (Wire.getLastResult())
+  switch (Object.getLastResult())
   {
     case GBJ_TWOWIRE_ERR_NACK_ADDR:
       Serial.println("Bad address");
@@ -332,7 +335,7 @@ else
       break;
 
     default:
-      Serial.println("Uknown error");
+      Serial.println("Unknown error");
       break;    
   }
 }
@@ -346,42 +349,19 @@ else
 [Back to interface](#interface)
 
 
-<a id="writeByte"></a>
-## writeByte()
+<a id="busWrite"></a>
+## busWrite()
 #### Description
-The method writes one byte with respect to new and old Arduino system two-wire library.
+The method writes one or two byte integer data to the two-wire bus in respect to the current platform.
+- If the most significant byte (the first one from the left) is non-zero, the data is written as two subsequent bytes.
+- If the most significant byte is zero, the data is written as its Least significant byte (the right most one).
 
 #### Syntax
-    uint8_t writeByte(uint8_t data);
+    uint8_t busWrite(uint16_t data);
 
 #### Parameters
 <a id="prm_data"></a>
-- **data**: Data byte to be written.
-  - *Valid values*: non-negative integer 0 ~ 255
-  - *Default value*: none
-
-#### Returns
-Number of transmitted bytes.
-
-#### See also
-[writeInt()](#writeInt)
-
-[Back to interface](#interface)
-
-
-<a id="writeInt"></a>
-## writeInt()
-#### Description
-The method writes one byte with respect to new and old Arduino system two-wire library.
-The method writes two byte integer data with respect to new and old Arduino system two-wire library while starting with the most significant
-byte first, i.e., bytes from left to right.
-
-#### Syntax
-    uint8_t writeInt(uint16_t data);
-
-#### Parameters
-<a id="prm_data"></a>
-- **data**: Integer data to be written.
+- **data**: Data word or byte to be written.
   - *Valid values*: non-negative integer 0 ~ 65535
   - *Default value*: none
 
@@ -389,6 +369,120 @@ byte first, i.e., bytes from left to right.
 Number of transmitted bytes.
 
 #### See also
-[writeByte()](#writeByte)
+[busSend()](#busSend)
+
+[Back to interface](#interface)
+
+
+<a id="busSend"></a>
+## busSend()
+#### Description
+The method sends input data to the two-wire bus as one communication transaction.
+- The method is overloaded.
+- In case of two parameters, the first one is considered as a command and second one as the data. In this case the method sends 2 ~ 4 bytes to the bus in one transaction.
+- In case of one parameter, it is considered as the general data and in fact might be a command or the data. In this case the method sends 1 ~ 2 bytes to the bus in one transaction.
+
+#### Syntax
+    uint8_t busSend(uint16_t command, uint16_t data);
+    uint8_t busSend(uint16_t data);
+
+#### Parameters
+- **command**: Word or byte to be sent in the role of command.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+- **data**: Word or byte to be sent in the role of data.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+#### Returns
+Current result code. It is one of expected [result codes](#constants).
+
+#### See also
+[busWrite()](#busWrite)
+
+[Back to interface](#interface)
+
+
+<a id="busRead"></a>
+## busRead()
+#### Description
+The method reads one byte from the two-wire bus in respect to the current platform.
+
+#### Syntax
+    uint8_t busRead();
+
+#### Parameters
+None
+
+#### Returns
+Data byte read from the bus.
+
+#### See also
+[busReceive()](#busReceive)
+
+[Back to interface](#interface)
+
+
+<a id="busReceive"></a>
+## busReceive()
+#### Description
+The method reads multiple bytes from the two-wire bus and places them to the array defined by an input pointer.
+- The read bytes are put into the input array from starting index or from the beginning.
+
+#### Syntax
+    uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start);
+
+#### Parameters
+- **dataArray**: Pointer to an array of bytes for storing read data. The array should be enough large for storing all read bytes.
+  - *Valid values*: address of array of non-negative integers each 0 ~ 255 specific for the current platform
+  - *Default value*: none
+
+- **bytes**: Number of bytes to be read.
+  - *Valid values*: non-negative integer 0 ~ 255
+  - *Default value*: none
+
+- **start**: The array index where to start storing read bytes.
+  - *Valid values*: non-negative integer 0 ~ 255
+  - *Default value*: 0
+
+#### Returns
+Current result code. It is one of expected [result codes](#constants).
+
+#### Example
+```cpp
+gbj_twowire Object = gbj_twowire();
+uint8_t data[2];
+if (Object.busReceive(data, sizeof(data)/sizeof(data[0])))
+{
+  Serial.println("Data:");
+  Serial.println(data[0]);
+  Serial.println(data[1]);
+}
+else
+{
+  Serial.print("Error: ");
+  Serial.println(Object.getLastResult());
+}
+```
+
+```cpp
+gbj_twowire Object = gbj_twowire();
+uint8_t data[5];
+if (Object.busReceive(data, 2, 3))
+{
+  Serial.println("Data:");
+  Serial.println(data[3]);
+  Serial.println(data[4]);
+}
+else
+{
+  Serial.print("Error: ");
+  Serial.println(Object.getLastResult());
+}
+```
+
+#### See also
+[busRead()](#busRead)
 
 [Back to interface](#interface)
