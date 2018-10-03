@@ -1,4 +1,5 @@
 #include "gbj_twowire.h"
+const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 
 
 // Constructor
@@ -16,7 +17,7 @@ void gbj_twowire::release()
 {
   end();
 #if defined(__AVR__)
-  _busEnabled = false;
+  _status.busEnabled = false;
 #endif
 }
 
@@ -25,7 +26,7 @@ uint8_t gbj_twowire::busWrite(uint16_t data)
 {
   uint8_t countByte = 0;
   uint8_t dataByte;
-  // Write MSB of int if not zero
+  // Write MSB of a word if not zero
   dataByte = (uint8_t) (data >> 8);
   if (dataByte > 0x00)
   {
@@ -42,7 +43,7 @@ uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
 {
   initBus();
   beginTransmission(getAddress());
-  busWrite(command);
+  busWrite(setLastCommand(command));
   busWrite(data);
   if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
   return getLastResult();
@@ -89,25 +90,18 @@ uint8_t gbj_twowire::busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t star
 //------------------------------------------------------------------------------
 // Setters
 //------------------------------------------------------------------------------
-bool gbj_twowire::setBusStop(bool busStop)
-{
-  _busStop = busStop;
-  return getBusStop();
-}
-
-
 uint8_t gbj_twowire::setAddress(uint8_t address)
 {
   initLastResult();
   // Invalid address
-  if (address < GBJ_TWOWIRE_ADDRESS_MIN || address > GBJ_TWOWIRE_ADDRESS_MAX)
+  if (address < ADDRESS_MIN || address > ADDRESS_MAX)
   {
-    return setLastResult(GBJ_TWOWIRE_ERR_ADDRESS);
+    return setLastResult(ERROR_ADDRESS);
   }
   // No address change
   if (address == getAddress()) return getLastResult();
   // Set changed address
-  _address = address;
+  _status.address = address;
   if (!getBusStop()) end();
   initBus();
   beginTransmission(getAddress());
@@ -116,34 +110,28 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
 }
 
 
-uint8_t gbj_twowire::setLastResult(uint8_t lastResult)
+void gbj_twowire::setSpeed100()
 {
-  _lastResult = lastResult;
-  return getLastResult();
+#if defined(__AVR__)
+  setClock(CLOCK_100KHZ);
+#elif defined(PARTICLE)
+  setSpeed(CLOCK_100KHZ);
+#endif
 }
 
 
-void gbj_twowire::initLastResult()
+void gbj_twowire::setSpeed400()
 {
-  _lastResult = GBJ_TWOWIRE_SUCCESS;
+#if defined(__AVR__)
+  setClock(CLOCK_400KHZ);
+#elif defined(PARTICLE)
+  setSpeed(CLOCK_400KHZ);
+#endif
 }
-
-
-//------------------------------------------------------------------------------
-// Getters
-//------------------------------------------------------------------------------
-uint8_t gbj_twowire::getLastResult()  { return _lastResult; }
-uint8_t gbj_twowire::getAddress()     { return _address; }
-bool    gbj_twowire::getBusStop()     { return _busStop; }
-bool    gbj_twowire::isSuccess()      { return _lastResult == GBJ_TWOWIRE_SUCCESS; }
-bool    gbj_twowire::isError()        { return !isSuccess(); }
-
 
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
-
-
 // Wait for delay period expiry
 void gbj_twowire::wait(uint32_t delay)
 {
@@ -157,18 +145,18 @@ void gbj_twowire::initBus()
 {
   initLastResult();
 #if defined(__AVR__)
-  if (!_busEnabled)
+  if (!_status.busEnabled)
   {
-    // setClock(CLOCK_SPEED_100KHZ);
-    // setClock(CLOCK_SPEED_400KHZ);
+    // setSpeed100();
+    // setSpeed400();
     begin();
-    _busEnabled = true;
+    _status.busEnabled = true;
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
-    // setSpeed(CLOCK_SPEED_100KHZ);
-    // setSpeed(CLOCK_SPEED_400KHZ);
+    // setSpeed100();
+    // setSpeed400();
     begin();
   }
 #endif
@@ -178,8 +166,6 @@ void gbj_twowire::initBus()
 //------------------------------------------------------------------------------
 // Private methods
 //------------------------------------------------------------------------------
-
-
 uint8_t gbj_twowire::platformWrite(uint8_t data)
 {
   #if ARDUINO >= 100

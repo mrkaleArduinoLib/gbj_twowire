@@ -21,7 +21,6 @@
  */
 #ifndef GBJ_TWOWIRE_H
 #define GBJ_TWOWIRE_H
-#define GBJ_TWOWIRE_VERSION "GBJ_TWOWIRE 1.0.0"
 
 #if defined(__AVR__)
   #if ARDUINO >= 100
@@ -36,42 +35,37 @@
 #endif
 
 
-// Addresses
-#define GBJ_TWOWIRE_ADDRESS_MIN         0x01  // Minimal valid address
-#define GBJ_TWOWIRE_ADDRESS_MAX         0x77  // Maximal valid address
-
-#define GBJ_TWOWIRE_SUCCESS             0     // Result code
-
-// Error codes
-#ifndef GBJ_TWOWIRE_ERRORS_H
-#define GBJ_TWOWIRE_ERRORS_H
-  #if defined(__AVR__)
-    // Arduino error codes
-    #define GBJ_TWOWIRE_ERR_BUFFER      1   // Data too long to fit in transmit buffer
-    #define GBJ_TWOWIRE_ERR_NACK_ADDR   2   // Received NACK on transmit of address
-    #define GBJ_TWOWIRE_ERR_NACK_DATA   3   // Received NACK on transmit of data
-    #define GBJ_TWOWIRE_ERR_OTHER       4   // Other error
-    // Custom errors
-    #define GBJ_TWOWIRE_ERR_ADDRESS     GBJ_TWOWIRE_ERR_NACK_ADDR
-    // Arduino clock speed
-    #define CLOCK_SPEED_100KHZ          100000L
-    #define CLOCK_SPEED_400KHZ          400000L
-  #elif defined(PARTICLE)
-    // Particle error codes
-    #define GBJ_TWOWIRE_ERR_BUSY        1   // Busy timeout upon entering endTransmission()
-    #define GBJ_TWOWIRE_ERR_START       2   // START bit generation timeout
-    #define GBJ_TWOWIRE_ERR_END         3   // End of address transmission timeout
-    #define GBJ_TWOWIRE_ERR_TRANSFER    4   // Data byte transfer timeout
-    #define GBJ_TWOWIRE_ERR_TIMEOUT     5   // Data byte transfer succeeded, busy timeout immediately after
-    // Custom errors
-    #define GBJ_TWOWIRE_ERR_ADDRESS     GBJ_TWOWIRE_ERR_START
-  #endif
-#endif
-
-
-class gbj_twowire : protected TwoWire
+class gbj_twowire : public TwoWire
 {
 public:
+//------------------------------------------------------------------------------
+// Public constants
+//------------------------------------------------------------------------------
+static const String VERSION;
+enum ResultCodes
+{
+  SUCCESS = 0,
+  #if defined(__AVR__)
+  // Arduino error codes
+  ERROR_BUFFER = 1,  // Data too long to fit in transmit buffer
+  ERROR_NACK_ADDR = 2,  // Received NACK on transmit of address
+  ERROR_NACK_DATA = 3,  // Received NACK on transmit of data
+  ERROR_NACK_OTHER = 4,  // Other error
+  // Arduino custom errors
+  ERROR_NACK_ADDRESS = ERROR_NACK_ADDR,
+  #elif defined(PARTICLE)
+  // Particle error codes
+  ERROR_BUSY = 1,  // Busy timeout upon entering endTransmission()
+  ERROR_START = 2,  // START bit generation timeout
+  ERROR_END = 3,  // End of address transmission timeout
+  ERROR_TRANSFER = 4,  // Data byte transfer timeout
+  ERROR_TIMEOUT = 5,  // Data byte transfer succeeded, busy timeout immediately after
+  // Particle custom errors
+  ERROR_ADDRESS = ERROR_START,
+  #endif
+};
+
+
 //------------------------------------------------------------------------------
 // Public methods
 //------------------------------------------------------------------------------
@@ -218,44 +212,91 @@ uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 //------------------------------------------------------------------------------
 // Public setters - they usually return result code.
 //------------------------------------------------------------------------------
+inline void initLastResult() { _status.lastResult = SUCCESS; };
+inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _status.lastResult = lastResult; };
+inline bool setBusStop(bool busStop) { return _status.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
-bool    setBusStop(bool busStop);
-uint8_t setLastResult(uint8_t lastResult = GBJ_TWOWIRE_SUCCESS);
-void    initLastResult();
+
+
+/*
+  Setup two-wire bus to clock 100 kHz
+
+  DESCRIPTION:
+  The method sets bus clock to desired frequency.
+
+  PARAMETERS: none
+
+  RETURN: none
+*/
+void setSpeed100();
+
+
+/*
+  Setup two-wire bus to clock 400 kHz
+
+  DESCRIPTION:
+  The method sets bus clock to desired frequency.
+
+  PARAMETERS: none
+
+  RETURN: none
+*/
+void setSpeed400();
 
 
 //------------------------------------------------------------------------------
 // Public getters
 //------------------------------------------------------------------------------
-bool     getBusStop();        // Flag about current bus releasing
-uint8_t  getAddress();        // Current device address
-uint8_t  getLastResult();     // Result of a recent operation
-bool     isSuccess();         // Flag about succsssful recent operation
-bool     isError();           // Flag about erroneous recent operation
+inline uint8_t getLastResult() { return _status.lastResult; }; // Result of a recent operation
+inline uint8_t getLastCommand() { return _status.lastCommand; }; // Command code of a recent operation
+inline uint8_t getAddress() { return _status.address; };  // Current device address
+inline bool isSuccess() { return _status.lastResult == SUCCESS; } // Flag about successful recent operation
+inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
+inline bool getBusStop() { return _status.busStop; };  // Flag about current bus releasing
 
 
 private:
 //------------------------------------------------------------------------------
+// Private constants
+//------------------------------------------------------------------------------
+enum AddressRange
+{
+  ADDRESS_MIN = 0x01,  // Minimal valid address
+  ADDRESS_MAX = 0x77,  // Maximal valid address
+};
+enum ClockSpeed
+{
+  CLOCK_100KHZ = 100000L,
+  CLOCK_400KHZ = 400000L,
+};
+
+
+//------------------------------------------------------------------------------
 // Private attributes
 //------------------------------------------------------------------------------
-#if defined(__AVR__)
-bool     _busEnabled;   // Flag about bus initialization
-#endif
-bool     _busStop;      // Flag about releasing bus after end of transmission
-uint8_t  _address;      // Address of the sensor
-uint8_t  _lastResult;   // Result of a recent operation
+struct
+{
+  uint8_t lastResult; // Result of a recent operation
+  uint8_t lastCommand;  // Command code recently sent to two-wire bus
+  uint8_t address;  // Address of the device on two-wire bus
+  uint32_t clock;  // Clock frequency in Hz
+  bool busStop;  // Flag about releasing bus after end of transmission
+  #if defined(__AVR__)
+  bool busEnabled;  // Flag about bus initialization
+  #endif
+} _status;  // Microcontroller status features
 
 
 //------------------------------------------------------------------------------
 // Private methods
 //------------------------------------------------------------------------------
+uint8_t platformWrite(uint8_t data);
 
 
 protected:
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
-
 
 /*
   Wait for a period of time.
@@ -273,6 +314,7 @@ protected:
 */
 void wait(uint32_t delay);
 
+
 /*
   Initialize two wire bus if it is not yet.
 
@@ -285,13 +327,6 @@ void wait(uint32_t delay);
   RETURN: none
 */
 void initBus();
-
-
-private:
-//------------------------------------------------------------------------------
-// Private methods
-//------------------------------------------------------------------------------
-uint8_t platformWrite(uint8_t data);
 
 };
 
