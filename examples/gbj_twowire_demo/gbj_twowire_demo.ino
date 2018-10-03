@@ -12,45 +12,56 @@
   CREDENTIALS:
   Author: Libor Gabaj
 */
+#include "gbj_twowire.h"
 #define SKETCH "GBJ_TWOWIRE_DEMO 1.0.0"
 
-#include "gbj_twowire.h"
 
-// Update for good and wrong value to experiment
-// const byte ADDRESS_DEVICE = 0x3C;   // Good
-const byte ADDRESS_DEVICE = 0x3D;   // Wrong
+// Comment/Uncomment/Update for good and wrong value to experiment
+const byte ADDRESS_DEVICE = 0x23;   // Good
+// const byte ADDRESS_DEVICE = 0x24;   // Wrong
 gbj_twowire Device = gbj_twowire();
+// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_400KHZ);
+// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ, false);
+
+
+void errorHandler()
+{
+  if (Device.isSuccess()) return;
+  Serial.print("Error: ");
+  Serial.print(Device.getLastResult());
+  Serial.print(" - ");
+  switch (Device.getLastResult())
+  {
+    case gbj_twowire::ERROR_ADDRESS:
+      Serial.println("Bad address");
+      break;
+
+    case gbj_twowire::ERROR_NACK_OTHER:
+      Serial.println("Other error");
+      break;
+
+    default:
+      Serial.println("Uknown error");
+      break;
+  }
+}
+
 
 void setup()
 {
   Serial.begin(9600);
-  Device.initLastResult();
   Device.setAddress(ADDRESS_DEVICE);
-  if (Device.getLastResult() == GBJ_TWOWIRE_SUCCESS)
+  if (Device.isError())
   {
-    Serial.print("Success: ");
-    Serial.println(Device.getLastResult());
+    errorHandler();
+    return;
   }
-  else
-  {
-    Serial.print("Error: ");
-    Serial.print(Device.getLastResult());
-    Serial.print(" - ");
-    switch (Device.getLastResult())
-    {
-      case GBJ_TWOWIRE_ERR_NACK_ADDR:
-        Serial.println("Bad address");
-        break;
-
-      case GBJ_TWOWIRE_ERR_OTHER:
-        Serial.println("Other error");
-        break;
-
-      default:
-        Serial.println("Uknown error");
-        break;
-    }
-  }
+  Serial.print("Success: ");
+  Serial.println(Device.getLastResult());
+  Serial.print("Bus Clock (Hz): ");
+  Serial.println(Device.getBusClock());
+  Serial.print("Bus Stop: ");
+  Serial.println(Device.getBusStop() ? "Yes" : "No");
 }
 
 void loop() {}

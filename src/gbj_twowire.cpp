@@ -3,7 +3,11 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 
 
 // Constructor
-gbj_twowire::gbj_twowire(){}
+gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop)
+{
+  setBusClock(clockSpeed);
+  setBusStop(busStop);
+}
 
 
 // Destructor
@@ -109,26 +113,6 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   return getLastResult();
 }
 
-
-void gbj_twowire::setSpeed100()
-{
-#if defined(__AVR__)
-  setClock(CLOCK_100KHZ);
-#elif defined(PARTICLE)
-  setSpeed(CLOCK_100KHZ);
-#endif
-}
-
-
-void gbj_twowire::setSpeed400()
-{
-#if defined(__AVR__)
-  setClock(CLOCK_400KHZ);
-#elif defined(PARTICLE)
-  setSpeed(CLOCK_400KHZ);
-#endif
-}
-
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
@@ -140,7 +124,7 @@ void gbj_twowire::wait(uint32_t delay)
 }
 
 
-// Initialize two wire bus
+// Initialize two-wire bus
 void gbj_twowire::initBus()
 {
   initLastResult();
@@ -173,4 +157,24 @@ uint8_t gbj_twowire::platformWrite(uint8_t data)
   #else
     return send(data);
   #endif
+}
+
+
+void gbj_twowire::setBusClock(uint32_t clockSpeed)
+{
+  switch (clockSpeed)
+  {
+    case CLOCK_100KHZ:
+    case CLOCK_400KHZ:
+      _status.clock = clockSpeed;
+      break;
+    default:
+      _status.clock = CLOCK_100KHZ;
+      break;
+  };
+#if defined(__AVR__)
+  setClock(_status.clock);
+#elif defined(PARTICLE)
+  setSpeed(_status.clock);
+#endif
 }

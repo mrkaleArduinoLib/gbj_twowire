@@ -4,7 +4,7 @@
 
   DESCRIPTION:
   Library embraces and provides common methods used at every application
-  working with sensor ontwo wire (I2C) bus.
+  working with sensor on two-wire (I2C) bus.
   - Library specifies (inherits from) the system TwoWire library.
   - Library implements extended error handling.
   - Library provides some general system methods implemented differently for
@@ -52,7 +52,7 @@ enum ResultCodes
   ERROR_NACK_DATA = 3,  // Received NACK on transmit of data
   ERROR_NACK_OTHER = 4,  // Other error
   // Arduino custom errors
-  ERROR_NACK_ADDRESS = ERROR_NACK_ADDR,
+  ERROR_ADDRESS = ERROR_NACK_ADDR,
   #elif defined(PARTICLE)
   // Particle error codes
   ERROR_BUSY = 1,  // Busy timeout upon entering endTransmission()
@@ -63,6 +63,11 @@ enum ResultCodes
   // Particle custom errors
   ERROR_ADDRESS = ERROR_START,
   #endif
+};
+enum ClockSpeed
+{
+  CLOCK_100KHZ = 100000L,
+  CLOCK_400KHZ = 400000L,
 };
 
 
@@ -76,18 +81,28 @@ enum ResultCodes
   DESCRIPTION:
   Constructor just creates the class instance object.
 
-  PARAMETERS: none
+  PARAMETERS:
+  clockSpeed - Two-wire bus clock frequency in Herz. If the clock is not from
+               enumeration, it fallbacks to 100 kHz.
+               - Data type: long
+               - Default value: CLOCK_100KHZ
+               - Limited range: CLOCK_100KHZ, CLOCK_400KHZ
+
+  busStop - Flag about releasing the bus after end of data transmission.
+            - Data type: boolean
+            - Default value: true
+            - Limited range: true, false
 
   RETURN:  object
 */
-gbj_twowire();
+gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, bool busStop = true);
 
 
 /*
   Destructor.
 
   DESCRIPTION:
-  Destructor releases two wire bus.
+  Destructor releases two-wire bus.
 
   PARAMETERS: none
 
@@ -97,10 +112,10 @@ gbj_twowire();
 
 
 /*
-  Release two wire bus.
+  Release two-wire bus.
 
   DESCRIPTION:
-  The pins used by the two wire bus are available for general purpose I/O.
+  The pins used by the two-wire bus are available for general purpose I/O.
 
   PARAMETERS: none
 
@@ -218,38 +233,13 @@ inline bool setBusStop(bool busStop) { return _status.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
 
 
-/*
-  Setup two-wire bus to clock 100 kHz
-
-  DESCRIPTION:
-  The method sets bus clock to desired frequency.
-
-  PARAMETERS: none
-
-  RETURN: none
-*/
-void setSpeed100();
-
-
-/*
-  Setup two-wire bus to clock 400 kHz
-
-  DESCRIPTION:
-  The method sets bus clock to desired frequency.
-
-  PARAMETERS: none
-
-  RETURN: none
-*/
-void setSpeed400();
-
-
 //------------------------------------------------------------------------------
 // Public getters
 //------------------------------------------------------------------------------
 inline uint8_t getLastResult() { return _status.lastResult; }; // Result of a recent operation
 inline uint8_t getLastCommand() { return _status.lastCommand; }; // Command code of a recent operation
 inline uint8_t getAddress() { return _status.address; };  // Current device address
+inline uint32_t getBusClock() { return _status.clock; };  // Bus clock frequency in Hz
 inline bool isSuccess() { return _status.lastResult == SUCCESS; } // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
 inline bool getBusStop() { return _status.busStop; };  // Flag about current bus releasing
@@ -263,11 +253,6 @@ enum AddressRange
 {
   ADDRESS_MIN = 0x01,  // Minimal valid address
   ADDRESS_MAX = 0x77,  // Maximal valid address
-};
-enum ClockSpeed
-{
-  CLOCK_100KHZ = 100000L,
-  CLOCK_400KHZ = 400000L,
 };
 
 
@@ -290,7 +275,9 @@ struct
 //------------------------------------------------------------------------------
 // Private methods
 //------------------------------------------------------------------------------
+inline uint8_t setLastCommand(uint8_t lastCommand) { return _status.lastCommand = lastCommand; };
 uint8_t platformWrite(uint8_t data);
+void setBusClock(uint32_t clockSpeed);
 
 
 protected:
@@ -316,10 +303,10 @@ void wait(uint32_t delay);
 
 
 /*
-  Initialize two wire bus if it is not yet.
+  Initialize two-wire bus if it is not yet.
 
   DESCRIPTION:
-  The method starts two wire bus, if it is not yet and sets up the flag
+  The method starts two-wire bus, if it is not yet and sets up the flag
   about it in order not to start the bus again.
 
   PARAMETERS: none
