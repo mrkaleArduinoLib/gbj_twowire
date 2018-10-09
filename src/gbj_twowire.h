@@ -79,10 +79,12 @@ enum ClockSpeed
   Constructor.
 
   DESCRIPTION:
-  Constructor just creates the class instance object.
+  Constructor creates the class instance object and sets some bus parameters.
+  Those parameters can be changed individually later in a sketch, if needed
+  to change them dynamically.
 
   PARAMETERS:
-  clockSpeed - Two-wire bus clock frequency in Herz. If the clock is not from
+  clockSpeed - Two-wire bus clock frequency in Hertz. If the clock is not from
                enumeration, it fallbacks to 100 kHz.
                - Data type: long
                - Default value: CLOCK_100KHZ
@@ -229,8 +231,26 @@ uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 //------------------------------------------------------------------------------
 inline void initLastResult() { _status.lastResult = SUCCESS; };
 inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _status.lastResult = lastResult; };
-inline bool setBusStop(bool busStop) { return _status.busStop = busStop; };
+inline void setBusStop(bool busStop) { _status.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
+
+/*
+  Set frequency of the two-wire bus.
+
+  DESCRIPTION:
+  Method updates the bus clock frequency in the class instance object only. It
+  takes effect at next bus initialization by using method busSend or busReceive.
+
+  PARAMETERS:
+  clockSpeed - Two-wire bus clock frequency in Hertz. If the clock is not from
+               enumeration, it fallbacks to 100 kHz.
+               - Data type: long
+               - Default value: CLOCK_100KHZ
+               - Limited range: CLOCK_100KHZ, CLOCK_400KHZ
+
+  RETURN: none
+*/
+void setBusClock(uint32_t clockSpeed);
 
 
 //------------------------------------------------------------------------------
@@ -251,8 +271,10 @@ private:
 //------------------------------------------------------------------------------
 enum AddressRange
 {
-  ADDRESS_MIN = 0x01,  // Minimal valid address
-  ADDRESS_MAX = 0x77,  // Maximal valid address
+  ADDRESS_MIN = 0x00,  // Minimal valid address
+  ADDRESS_MAX = 0x7F,  // Maximal valid address
+  // ADDRESS_MIN = 0x03,  // Minimal usual address
+  // ADDRESS_MAX = 0x77,  // Maximal usual address
 };
 
 
@@ -277,7 +299,6 @@ struct
 //------------------------------------------------------------------------------
 inline uint8_t setLastCommand(uint8_t lastCommand) { return _status.lastCommand = lastCommand; };
 uint8_t platformWrite(uint8_t data);
-void setBusClock(uint32_t clockSpeed);
 
 
 protected:

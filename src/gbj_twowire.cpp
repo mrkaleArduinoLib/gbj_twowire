@@ -113,52 +113,6 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   return getLastResult();
 }
 
-//------------------------------------------------------------------------------
-// Protected methods
-//------------------------------------------------------------------------------
-// Wait for delay period expiry
-void gbj_twowire::wait(uint32_t delay)
-{
-  uint32_t timestamp = millis();
-  while (millis() - timestamp < delay);
-}
-
-
-// Initialize two-wire bus
-void gbj_twowire::initBus()
-{
-  initLastResult();
-#if defined(__AVR__)
-  if (!_status.busEnabled)
-  {
-    // setSpeed100();
-    // setSpeed400();
-    begin();
-    _status.busEnabled = true;
-  }
-#elif defined(PARTICLE)
-  if (!isEnabled())
-  {
-    // setSpeed100();
-    // setSpeed400();
-    begin();
-  }
-#endif
-}
-
-
-//------------------------------------------------------------------------------
-// Private methods
-//------------------------------------------------------------------------------
-uint8_t gbj_twowire::platformWrite(uint8_t data)
-{
-  #if ARDUINO >= 100
-    return write(data);
-  #else
-    return send(data);
-  #endif
-}
-
 
 void gbj_twowire::setBusClock(uint32_t clockSpeed)
 {
@@ -177,4 +131,49 @@ void gbj_twowire::setBusClock(uint32_t clockSpeed)
 #elif defined(PARTICLE)
   setSpeed(_status.clock);
 #endif
+}
+
+
+//------------------------------------------------------------------------------
+// Protected methods
+//------------------------------------------------------------------------------
+// Wait for delay period expiry
+void gbj_twowire::wait(uint32_t delay)
+{
+  uint32_t timestamp = millis();
+  while (millis() - timestamp < delay);
+}
+
+
+// Initialize two-wire bus
+void gbj_twowire::initBus()
+{
+  initLastResult();
+#if defined(__AVR__)
+  if (!_status.busEnabled)
+  {
+    setBusClock(_status.clock)
+    begin();
+    _status.busEnabled = true;
+  }
+#elif defined(PARTICLE)
+  if (!isEnabled())
+  {
+    setBusClock(_status.clock)
+    begin();
+  }
+#endif
+}
+
+
+//------------------------------------------------------------------------------
+// Private methods
+//------------------------------------------------------------------------------
+uint8_t gbj_twowire::platformWrite(uint8_t data)
+{
+  #if ARDUINO >= 100
+    return write(data);
+  #else
+    return send(data);
+  #endif
 }

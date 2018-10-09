@@ -1,13 +1,14 @@
 <a id="library"></a>
 # gbjTwoWire
-Library embraces and provides common methods used at every application working with sensor on two wire (I2C) bus.
-- Library specifies (inherits from) the system TwoWire library.
+The library embraces and provides common methods used at every application working with sensor on two-wire (I2C) bus.
+- Library specifies (inherits from) the system `TwoWire` library.
 - The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
 - Library implements extended error handling.
 - Library provides some general system methods implemented differently for various platforms, especially Arduino vs. Particle.
-- The library does not use the built-in function `delay()` at waiting for waking up sensor from power down mode, but instead of it the own implementation of the `wait()` function based on system `millis()` function.
-- The library initiates the two wire bus at default speed (serial clock) **100 kHz**.
+- Library initiates the two-wire bus at default speed (serial clock) **100 kHz**.
 - It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
+- Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
+- Library allows address range 0x01 ~ 0x77.
 
 
 
@@ -21,33 +22,31 @@ Library embraces and provides common methods used at every application working w
 - **Arduino.h**: Main include file for the Arduino SDK version greater or equal to 100.
 - **WProgram.h**: Main include file for the Arduino SDK version less than 100.
 - **inttypes.h**: Integer type conversions. This header file includes the exact-width integer definitions and extends them with additional facilities provided by the implementation.
-- **TwoWire**: I2C system library loaded from the file *Wire.h*.
+- **TwoWire**: I2C system library loaded from the file `Wire.h`.
 
 
 <a id="constants"></a>
 ## Constants
-- **GBJ\_TWOWIRE\_VERSION**: Name and semantic version of the library.
-- **GBJ\_TWOWIRE\_ADDRESS\_MIN**: Minimal valid address of a device.
-- **GBJ\_TWOWIRE\_ADDRESS\_MAX**: Maximal valid address of a device.
-- **CLOCK\_SPEED\_100KHZ**: Bus clock speed 100 kHz.
-- **CLOCK\_SPEED\_400KHZ**: Bus clock speed 400 kHz.
-- **GBJ\_TWOWIRE\_SUCCESS**: Result code for successful processing.
-- **GBJ\_TWOWIRE\_ERR\_ADDRESS**: Platform specific error code at bad address
+- **gbj\_twowire::VERSION**: Name and semantic version of the library.
+- **gbj\_twowire::CLOCK\_100KHZ**: Bus clock speed 100 kHz.
+- **gbj\_twowire::CLOCK\_400KHZ**: Bus clock speed 400 kHz.
+- **gbj\_twowire::SUCCESS**: Result code for successful processing.
 
-### Arduino error codes
-- **GBJ\_TWOWIRE\_ERR\_BUFFER**: Data too long to fit in transmit buffer.
-- **GBJ\_TWOWIRE\_ERR\_NACK\_ADDR**: Received NACK on transmit of address.
-- **GBJ\_TWOWIRE\_ERR\_NACK\_DATA**: Received NACK on transmit of data.
-- **GBJ\_TWOWIRE\_ERR\_OTHER**:  Other error.
+### Arduino errors
+- **gbj\_twowire::ERROR\_BUFFER**: Data too long to fit in transmit buffer.
+- **gbj\_twowire::ERROR\_NACK\_ADDR**: Received NACK on transmit of address.
+- **gbj\_twowire::ERROR\_NACK\_DATA**: Received NACK on transmit of data.
+- **gbj\_twowire::ERROR\_OTHER**:  Other error.
 
 ### Particle error codes
-- **GBJ\_TWOWIRE\_ERR\_BUSY**: Busy timeout upon entering endTransmission().
-- **GBJ\_TWOWIRE\_ERR\_START**: START bit generation timeout.
-- **GBJ\_TWOWIRE\_ERR\_END**: End of address transmission timeout.
-- **GBJ\_TWOWIRE\_ERR\_TRANSFER**: Data byte transfer timeout.
-- **GBJ\_TWOWIRE\_ERR\_TIMEOUT**: Data byte transfer succeeded, busy timeout immediately after.
+- **gbj\_twowire::ERROR\_BUSY**: Busy timeout upon entering `endTransmission()`.
+- **gbj\_twowire::ERROR\_START**: START bit generation timeout.
+- **gbj\_twowire::ERROR\_END**: End of address transmission timeout.
+- **gbj\_twowire::ERROR\_TRANSFER**: Data byte transfer timeout.
+- **gbj\_twowire::ERROR\_TIMEOUT**: Data byte transfer succeeded, busy timeout immediately after.
 
-Remaining constants are listed in the library include file. They are used mostly internally as function codes of the sensor.
+### Common errors
+- **gbj\_twowire::ERROR\_ADDRESS**: Platform specific error code at bad address.
 
 
 <a id="interface"></a>
@@ -55,40 +54,56 @@ Remaining constants are listed in the library include file. They are used mostly
 - [gbj_twowire()](#gbj_twowire)
 - [~gbj_twowire()](#gbj_twowire)
 - [release()](#release)
-- [initLastResult()](#initLastResult)
-- [isSuccess()](#isSuccess)
-- [isError()](#isError)
 - [busWrite()](#busWrite)
 - [busSend()](#busSend)
 - [busRead()](#busRead)
 - [busReceive()](#busReceive)
 
 #### Setters
+- [setLastResult()](#setLastResult)
 - [setAddress()](#setAddress)
 - [setBusStop()](#setBusStop)
-- [setLastResult()](#setLastResult)
+- [setBusClock()](#setBusClock)
+- [initLastResult()](#initLastResult)
 
 #### Getters
+- [getLastResult()](#getLastResult)
+- [getLastCommand()](#getLastResult)
 - [getAddress()](#getAddress)
 - [getBusStop()](#getBusStop)
-- [getLastResult()](#getLastResult)
+- [getBusClock()](#getBusClock)
+- [isSuccess()](#isSuccess)
+- [isError()](#isError)
 
 
 <a id="gbj_twowire"></a>
 ## gbj_twowire()
 #### Description
+Destructor `~gbj_twowire()` just releases the two-wire bus.
 Constructor `gbj_twowire()` just creates a class instance object.
-Destructor `~gbj_twowire()` just releases the two wire bus.
+Constructor `gbj_twowire()` creates the class instance object and sets some bus parameters.
+- Constructor parameters can be changed individually later in a sketch, if needed to change them dynamically.
 - If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
-    gbj_twowire();
+    gbj_twowire((uint32_t clockSpeed, bool busStop);
 
 #### Parameters
-None
+<a id="prm_busClock"></a>
+- **clockSpeed**: Two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
+  - *Valid values*: gbj\_twowire::CLOCK\_100KHZ, gbj\_twowire::CLOCK\_400KHZ
+  - *Default value*: gbj\_twowire::CLOCK\_100KHZ
+
+
+<a id="prm_busStop"></a>
+- **busStop**: Logical flag about releasing bus after end of transmission.
+  - *Valid values*: true, false
+    - **true**: Releases the bus after data transmission and enables other master devices to control the bus.
+    - **false**: Keeps connection to the bus and enables to begin further data transmission immediately.
+  - *Default value*: true
 
 #### Returns
-Object performing the extended two wire bus management.
+Object performing the extended two-wire bus management.
 
 [Back to interface](#interface)
 
@@ -96,7 +111,7 @@ Object performing the extended two wire bus management.
 <a id="release"></a>
 ## release()
 #### Description
-The method releases the two wire bus so that pins used by it are available for general purpose I/O.
+The method releases the two-wire bus, so that pins used by it are available for general purpose I/O.
 
 #### Syntax
     void release();
@@ -113,7 +128,7 @@ None
 <a id="initLastResult"></a>
 ## initLastResult()
 #### Description
-The method sets internal status of recent processing on the two wire bus to success with value of macro [GBJ\_TWOWIRE\_SUCCESS](#constants). It is usually called right before any operation on the bus in order to reset the internal status.
+The method sets internal status of recent processing on the two-wire bus to success with value of macro [gbj\_twowire::SUCCESS](#constants). It is usually called right before any operation on the bus in order to reset the internal status.
 
 #### Syntax
     void initLastResult();
@@ -135,7 +150,7 @@ None
 <a id="isSuccess"></a>
 ## isSuccess()
 #### Description
-The method returns a flag whether the recent operation on the two wire bus was successful.
+The method returns a flag whether the recent operation on the two-wire bus was successful.
 
 #### Syntax
     boolean isSuccess();
@@ -157,7 +172,7 @@ Flag about successful processing of the recent operation on the bus.
 <a id="isError"></a>
 ## isError()
 #### Description
-The method returns a flag whether the recent operation on the two wire bus failed. The corresponding error code can be obtained by the method [getLastResult()]((#getLastResult), which one of the error macro [constants](#constants).
+The method returns a flag whether the recent operation on the two-wire bus failed. The corresponding error code can be obtained by the method [getLastResult()]((#getLastResult), which is one of error [constants](#constants).
 
 #### Syntax
     boolean isError();
@@ -179,7 +194,7 @@ Flag about failing of the recent operation on the bus.
 <a id="setAddress"></a>
 ## setAddress()
 #### Description
-The method sets new address of a device to the instance object.
+The method sets new address of a device in the instance object.
 
 #### Syntax
     uint8_t setAddress(uint8_t address);
@@ -187,16 +202,16 @@ The method sets new address of a device to the instance object.
 #### Parameters
 <a id="prm_address"></a>
 - **address**: The address value of a device, with which the microcontroller is going to communicate.
-  - *Valid values*: [GBJ\_TWOWIRE\_ADDRESS\_MIN ~ GBJ\_TWOWIRE\_ADDRESS\_MAX](#constants). Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two wire bus. Practically the range is from 3 (0x03), in special cases from 1 (0x01) to 119 (0x77), while addresses outside this range are reserved for special purposes.
+  - *Valid values*: Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two-wire bus. Practically the range is from 3 (0x03), in special cases from 1 (0x01) to 119 (0x77), while addresses outside this range are reserved for special purposes.
   - *Default value*: none
 
 #### Returns
-Result code defined by some of the macro [constants](#constants). In fact, it determines whether the new address is correct and a device communicate on that address.
+Some of [result or error codes](#constants). In fact, it determines whether the new address is correct and a device communicates on that address.
 
 #### Example
 ```cpp
 gbj_twowire Object = gbj_twowire();
-if (Object.setAddress(newAddress) == GBJ_TWOWIRE_SUCCESS)
+if (Object.setAddress(newAddress) == gbj_twowire::SUCCESS)
 {
   Serial.println("Success");
 }
@@ -205,30 +220,58 @@ if (Object.setAddress(newAddress) == GBJ_TWOWIRE_SUCCESS)
 #### See also
 [getAddress()](#getAddress)
 
+[getLastResult()](#getLastResult)
+
 [Back to interface](#interface)
 
 
 <a id="setBusStop"></a>
 ## setBusStop()
 #### Description
-The method sets the stop flag determining releasing the two wire bus after each end of data transmission.
+The method sets the stop flag determining releasing the two-wire bus after each end of data transmission.
 
 #### Syntax
-    bool setBusStop(bool busStop);
+    void setBusStop(bool busStop);
 
 #### Parameters
 <a id="prm_busStop"></a>
 - **busStop**: Logical flag about releasing bus after end of transmission.
   - *Valid values*: true, false
-	  - **true**: Releases the bus after data transmission and enables other master devices to control the bus.
-    - **false**: Keeps connection to the bus and enables begin further data transmission immediately.
+    - **true**: Releases the bus after data transmission and enables other master devices to control the bus.
+    - **false**: Keeps connection to the bus and enables to begin further data transmission immediately.
   - *Default value*: none
 
 #### Returns
-New (actual) value of bus stop flag.
+None
 
 #### See also
+[constructor](#gbj_twowire)
+
 [getBusStop()](#getBusStop)
+
+[Back to interface](#interface)
+
+
+<a id="setBusClock"></a>
+## setBusClock()
+#### Description
+The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [busSend()](#busSend) or [busReceive()](#busReceive).
+
+#### Syntax
+    void setBusClock(uint32_t clockSpeed);
+
+#### Parameters
+- **clockSpeed**: Two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
+  - *Valid values*: gbj\_twowire::CLOCK\_100KHZ, gbj\_twowire::CLOCK\_400KHZ
+  - *Default value*: none
+
+#### Returns
+None
+
+#### See also
+[constructor](#gbj_twowire)
+
+[getBusClock()](#getBusClock)
 
 [Back to interface](#interface)
 
@@ -236,7 +279,7 @@ New (actual) value of bus stop flag.
 <a id="setLastResult"></a>
 ## setLastResult()
 #### Description
-The method sets the internal status of recent processing on the two wire bus to input value. Without input parameter it is equivalent to the method [initLastResult()](#initLastResult).
+The method sets the internal status of recent processing on the two-wire bus to input value. Without input parameter it is equivalent to the method [initLastResult()](#initLastResult).
 
 #### Syntax
     uint8_t setLastResult(uint8_t lastResult);
@@ -244,11 +287,11 @@ The method sets the internal status of recent processing on the two wire bus to 
 #### Parameters
 <a id="prm_lastResult"></a>
 - **lastResult**: Desired result code that should be set as a last result code.
-  - *Valid values*: One of macro for [result codes](#constants).
-  - *Default value*: [GBJ\_TWOWIRE\_SUCCESS](#constants)
+  - *Valid values*: Some of [result or error codes](#constants).
+  - *Default value*: [gbj\_twowire::SUCCESS](#constants)
 
 #### Returns
-New (actual) result code of recent operation on two wire bus.
+New (actual) result code of recent operation on two-wire bus.
 
 #### See also
 [initLastResult()](#initLastResult)
@@ -298,10 +341,30 @@ Current stopping flag.
 [Back to interface](#interface)
 
 
+<a id="getBusClock"></a>
+## getBusClock()
+#### Description
+The method returns the current bus clock frequency stored in the class instance object.
+
+#### Syntax
+    uint32_t getBusClock();
+
+#### Parameters
+None
+
+#### Returns
+Current two-wire bus clock frequency in Hertz.
+
+#### See also
+[setBusClock()](#setBusStop)
+
+[Back to interface](#interface)
+
+
 <a id="getLastResult"></a>
 ## getLastResult()
 #### Description
-The method returns a result code of the recent operation on the two wire bus. It is usually called for error handling in a sketch.
+The method returns a result code of the recent operation on the two-wire bus. It is usually called for error handling in a sketch.
 
 #### Syntax
     uint8_t getLastResult();
@@ -310,14 +373,14 @@ The method returns a result code of the recent operation on the two wire bus. It
 None
 
 #### Returns
-Current result code. It is one of expected [result codes](#constants).
+Some of [result or error codes](#constants).
 
 #### Example
 ```cpp
 gbj_twowire Object = gbj_twowire();
 Object.initLastResult();
 Object.setAddress(newAddress);
-if (Object.getLastResult() == GBJ_TWOWIRE_SUCCESS)
+if (Object.getLastResult() == gbj_twowire::SUCCESS)
 {
   Serial.println("Success");
 }
@@ -326,11 +389,11 @@ else
   Serial.print("Error: ");
   switch (Object.getLastResult())
   {
-    case GBJ_TWOWIRE_ERR_NACK_ADDR:
+    case gbj_twowire::ERROR_ADDRESS:
       Serial.println("Bad address");
       break;
 
-    case GBJ_TWOWIRE_ERR_OTHER:
+    case gbj_twowire::ERROR_NACK_OTHER:
       Serial.println("General error");
       break;
 
@@ -349,12 +412,29 @@ else
 [Back to interface](#interface)
 
 
+<a id="getLastCommand"></a>
+## getLastCommand()
+#### Description
+The method returns the command code used at recent communication on two-wire bus. In conjunction with returned result or error code of particular method it is possible to detect the source or reason of a communication error.
+
+#### Syntax
+	uint8_t getLastCommand();
+
+#### Parameters
+None
+
+#### Returns
+Recently used command code.
+
+[Back to interface](#interface)
+
+
 <a id="busWrite"></a>
 ## busWrite()
 #### Description
-The method writes one or two byte integer data to the two-wire bus in respect to the current platform.
+The method writes one or two byte integer data to the two-wire bus.
 - If the most significant byte (the first one from the left) is non-zero, the data is written as two subsequent bytes.
-- If the most significant byte is zero, the data is written as its Least significant byte (the right most one).
+- If the most significant byte is zero, the data is written as its least significant byte (the right most one).
 
 #### Syntax
     uint8_t busWrite(uint16_t data);
@@ -391,12 +471,13 @@ The method sends input data to the two-wire bus as one communication transaction
   - *Valid values*: non-negative integer 0 ~ 65535
   - *Default value*: none
 
+
 - **data**: Word or byte to be sent in the role of data.
   - *Valid values*: non-negative integer 0 ~ 65535
   - *Default value*: none
 
 #### Returns
-Current result code. It is one of expected [result codes](#constants).
+Some of [result or error codes](#constants).
 
 #### See also
 [busWrite()](#busWrite)
@@ -407,7 +488,7 @@ Current result code. It is one of expected [result codes](#constants).
 <a id="busRead"></a>
 ## busRead()
 #### Description
-The method reads one byte from the two-wire bus in respect to the current platform.
+The method reads one byte from the two-wire bus.
 
 #### Syntax
     uint8_t busRead();
@@ -435,19 +516,21 @@ The method reads multiple bytes from the two-wire bus and places them to the arr
 
 #### Parameters
 - **dataArray**: Pointer to an array of bytes for storing read data. The array should be enough large for storing all read bytes.
-  - *Valid values*: address of array of non-negative integers each 0 ~ 255 specific for the current platform
+  - *Valid values*: address  specific for the current platform of an array of non-negative integers each 0 ~ 255
   - *Default value*: none
+
 
 - **bytes**: Number of bytes to be read.
   - *Valid values*: non-negative integer 0 ~ 255
   - *Default value*: none
+
 
 - **start**: The array index where to start storing read bytes.
   - *Valid values*: non-negative integer 0 ~ 255
   - *Default value*: 0
 
 #### Returns
-Current result code. It is one of expected [result codes](#constants).
+Some of [result or error codes](#constants).
 
 #### Example
 ```cpp

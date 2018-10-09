@@ -13,6 +13,7 @@ gbj_twowire	KEYWORD1
 release	KEYWORD2
 setAddress	KEYWORD2
 setBusStop	KEYWORD2
+setBusClock	KEYWORD2
 setLastCommand	KEYWORD2
 initLastResult	KEYWORD2
 getBusClock	KEYWORD2
