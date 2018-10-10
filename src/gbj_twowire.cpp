@@ -152,14 +152,14 @@ void gbj_twowire::initBus()
 #if defined(__AVR__)
   if (!_status.busEnabled)
   {
-    setBusClock(_status.clock)
+    setBusClock(_status.clock);
     begin();
     _status.busEnabled = true;
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
-    setBusClock(_status.clock)
+    setBusClock(_status.clock);
     begin();
   }
 #endif

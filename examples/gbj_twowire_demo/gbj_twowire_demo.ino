@@ -17,8 +17,8 @@
 
 
 // Comment/Uncomment/Update for good and wrong value to experiment
-const byte ADDRESS_DEVICE = 0x23;   // Good
-// const byte ADDRESS_DEVICE = 0x24;   // Wrong
+const byte ADDRESS_DEVICE = 0x23;  // Good
+// const byte ADDRESS_DEVICE = 0x24;  // Wrong
 gbj_twowire Device = gbj_twowire();
 // gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_400KHZ);
 // gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ, false);
