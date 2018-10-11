@@ -12,9 +12,9 @@
   CREDENTIALS:
   Author: Libor Gabaj
 */
-#include "gbj_twowire.h"
 #define SKETCH "GBJ_TWOWIRE_DEMO 1.0.0"
 
+#include "gbj_twowire.h"
 
 // Comment/Uncomment/Update for good and wrong value to experiment
 const byte ADDRESS_DEVICE = 0x23;  // Good

@@ -3,8 +3,10 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 
 
 // Constructor
-gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop)
+gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL)
 {
+  _status.pinSDA = pinSDA;
+  _status.pinSCL = pinSCL;
   setBusClock(clockSpeed);
   setBusStop(busStop);
 }
@@ -153,11 +155,17 @@ void gbj_twowire::wait(uint32_t delay)
 void gbj_twowire::initBus()
 {
   initLastResult();
-#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
+#if defined(__AVR__)
   if (!_status.busEnabled)
   {
     setBusClock(_status.clock);
     begin();
+    _status.busEnabled = true;
+  }
+#elif defined(ESP8266) || defined(ESP32)
+  {
+    setBusClock(_status.clock);
+    begin(_status.pinSDA, _status.pinSCL);
     _status.busEnabled = true;
   }
 #elif defined(PARTICLE)

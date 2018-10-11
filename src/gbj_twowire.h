@@ -97,9 +97,20 @@ enum ClockSpeed
             - Default value: true
             - Limited range: true, false
 
+  pinSDA - Microcontroller's pin for serial data.
+          - Data type: non-negative integer
+          - Default value: D2 (GPIO4)
+          - Limited range: 0 ~ 255
+
+  pinSCL - Microcontroller's pin for serial clock.
+          - Data type: non-negative integer
+          - Default value: D1 (GPIO5)
+          - Limited range: 0 ~ 255
+
   RETURN:  object
 */
-gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, bool busStop = true);
+gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, bool busStop = true, \
+  uint8_t pinSDA = 4, uint8_t pinSCL = 5);
 
 
 /*
@@ -298,6 +309,10 @@ struct
   bool busStop;  // Flag about releasing bus after end of transmission
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   bool busEnabled;  // Flag about bus initialization
+#endif
+#if defined(ESP8266) || defined(ESP32)
+  uint8_t pinSDA;  // Pin for serial data
+  uint8_t pinSCL;  // Pin for serial clock
 #endif
 } _status;  // Microcontroller status features
 
