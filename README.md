@@ -4,11 +4,11 @@ The library embraces and provides common methods used at every application worki
 - Library specifies (inherits from) the system `TwoWire` library.
 - The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
 - Library implements extended error handling.
-- Library provides some general system methods implemented differently for various platforms, especially Arduino vs. Particle.
+- Library provides some general system methods implemented differently for various platforms, especially Arduino, ESP8266, ESP32, and Particle.
 - Library initiates the two-wire bus at default speed (serial clock) **100 kHz**.
 - It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
 - Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
-- Library allows address range 0x01 ~ 0x77.
+- Library allows address range 0x00 ~ 0x7F.
 
 
 
@@ -24,6 +24,10 @@ The library embraces and provides common methods used at every application worki
 - **inttypes.h**: Integer type conversions. This header file includes the exact-width integer definitions and extends them with additional facilities provided by the implementation.
 - **TwoWire**: I2C system library loaded from the file `Wire.h`.
 
+#### Espressif platform
+- **Arduino.h**: Main include file for the Arduino SDK version greater or equal to 100.
+- **TwoWire**: I2C system library loaded from the file `Wire.h`.
+
 
 <a id="constants"></a>
 ## Constants
@@ -32,7 +36,7 @@ The library embraces and provides common methods used at every application worki
 - **gbj\_twowire::CLOCK\_400KHZ**: Bus clock speed 400 kHz.
 - **gbj\_twowire::SUCCESS**: Result code for successful processing.
 
-### Arduino errors
+### Arduino and Espressif errors
 - **gbj\_twowire::ERROR\_BUFFER**: Data too long to fit in transmit buffer.
 - **gbj\_twowire::ERROR\_NACK\_ADDR**: Received NACK on transmit of address.
 - **gbj\_twowire::ERROR\_NACK\_DATA**: Received NACK on transmit of data.
@@ -70,6 +74,11 @@ The library embraces and provides common methods used at every application worki
 - [getLastResult()](#getLastResult)
 - [getLastCommand()](#getLastResult)
 - [getAddress()](#getAddress)
+- [getAddressMin()](#getAddressLimits)
+- [getAddressMinSpecial()](#getAddressLimits)
+- [getAddressMinUsual()](#getAddressLimits)
+- [getAddressMax()](#getAddressLimits)
+- [getAddressMaxUsual()](#getAddressLimits)
 - [getBusStop()](#getBusStop)
 - [getBusClock()](#getBusClock)
 - [isSuccess()](#isSuccess)
@@ -317,6 +326,30 @@ Current address of the sensor.
 
 #### See also
 [setAddress()](#setAddress)
+
+[Back to interface](#interface)
+
+
+<a id="getAddressLimits"></a>
+## getAddressMin(), getAddressMinSpecial(), getAddressMinUsual(), getAddressMax(), getAddressMaxUsual()
+#### Description
+Particular method returns corresponding address limit.
+
+#### Syntax
+    uint8_t getAddressMin();  // Minimal technically possible address (0x00)
+    uint8_t getAddressMinSpecial();  // Minimal address for specific purpose (0x01)
+    uint8_t getAddressMinUsual();  // Minimal address for regular devices (0x03)
+    uint8_t getAddressMax();  // Maximal technically possible address (0x7F)
+    uint8_t getAddressMaxUsual();  // Maximal address for regular devices (0x77)
+
+#### Parameters
+None
+
+#### Returns
+Corresponding address limit.
+
+#### See also
+[getAddress()](#getAddress)
 
 [Back to interface](#interface)
 

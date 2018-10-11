@@ -19,6 +19,11 @@ initLastResult	KEYWORD2
 getBusClock	KEYWORD2
 getBusStop	KEYWORD2
 getAddress	KEYWORD2
+getAddressMin	KEYWORD2
+getAddressMinSpecial	KEYWORD2
+getAddressMinUsual	KEYWORD2
+getAddressMax	KEYWORD2
+getAddressMaxUsual	KEYWORD2
 getLastCommand	KEYWORD2
 getLastResult	KEYWORD2
 isSuccess	KEYWORD2

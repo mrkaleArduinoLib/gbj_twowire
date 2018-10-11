@@ -19,8 +19,10 @@ gbj_twowire::~gbj_twowire()
 
 void gbj_twowire::release()
 {
+#if defined(__AVR__) || defined(PARTICLE)
   end();
-#if defined(__AVR__)
+#endif
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   _status.busEnabled = false;
 #endif
 }
@@ -106,7 +108,9 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   if (address == getAddress()) return getLastResult();
   // Set changed address
   _status.address = address;
+#if defined(__AVR__) || defined(PARTICLE)
   if (!getBusStop()) end();
+#endif
   initBus();
   beginTransmission(getAddress());
   setLastResult(endTransmission(getBusStop()));
@@ -126,7 +130,7 @@ void gbj_twowire::setBusClock(uint32_t clockSpeed)
       _status.clock = CLOCK_100KHZ;
       break;
   };
-#if defined(__AVR__)
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   setClock(_status.clock);
 #elif defined(PARTICLE)
   setSpeed(_status.clock);
@@ -149,7 +153,7 @@ void gbj_twowire::wait(uint32_t delay)
 void gbj_twowire::initBus()
 {
   initLastResult();
-#if defined(__AVR__)
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   if (!_status.busEnabled)
   {
     setBusClock(_status.clock);

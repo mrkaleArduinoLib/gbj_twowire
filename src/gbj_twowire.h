@@ -8,7 +8,7 @@
   - Library specifies (inherits from) the system TwoWire library.
   - Library implements extended error handling.
   - Library provides some general system methods implemented differently for
-    various platforms, especially Arduino vs. Particle.
+    various platforms, especially Arduino, ESP8266, ESP32, and Particle.
 
   LICENSE:
   This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,9 @@
   #endif
   #include <inttypes.h>
   #include <Wire.h>
+#elif defined(ESP8266) || defined(ESP32)
+  #include <Arduino.h>
+  #include <Wire.h>
 #elif defined(PARTICLE)
   #include <Particle.h>
 #endif
@@ -45,8 +48,8 @@ static const String VERSION;
 enum ResultCodes
 {
   SUCCESS = 0,
-  #if defined(__AVR__)
-  // Arduino error codes
+  #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
+  // Arduino, ESP error codes
   ERROR_BUFFER = 1,  // Data too long to fit in transmit buffer
   ERROR_NACK_ADDR = 2,  // Received NACK on transmit of address
   ERROR_NACK_DATA = 3,  // Received NACK on transmit of data
@@ -258,6 +261,11 @@ void setBusClock(uint32_t clockSpeed);
 inline uint8_t getLastResult() { return _status.lastResult; }; // Result of a recent operation
 inline uint8_t getLastCommand() { return _status.lastCommand; }; // Command code of a recent operation
 inline uint8_t getAddress() { return _status.address; };  // Current device address
+inline uint8_t getAddressMin() { return ADDRESS_MIN; };  // Adress limits...
+inline uint8_t getAddressMax() { return ADDRESS_MAX; };
+inline uint8_t getAddressMinSpecial() { return ADDRESS_MIN_SPECIAL; };
+inline uint8_t getAddressMinUsual() { return ADDRESS_MIN_USUAL; };
+inline uint8_t getAddressMaxUsual() { return ADDRESS_MAX_USUAL; };
 inline uint32_t getBusClock() { return _status.clock; };  // Bus clock frequency in Hz
 inline bool isSuccess() { return _status.lastResult == SUCCESS; } // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
@@ -272,8 +280,9 @@ enum AddressRange
 {
   ADDRESS_MIN = 0x00,  // Minimal valid address
   ADDRESS_MAX = 0x7F,  // Maximal valid address
-  // ADDRESS_MIN = 0x03,  // Minimal usual address
-  // ADDRESS_MAX = 0x77,  // Maximal usual address
+  ADDRESS_MIN_SPECIAL = 0x01,  // Minimal special purposes address
+  ADDRESS_MIN_USUAL = 0x03,  // Minimal usual address
+  ADDRESS_MAX_USUAL = 0x77,  // Maximal usual address
 };
 
 
@@ -287,9 +296,9 @@ struct
   uint8_t address;  // Address of the device on two-wire bus
   uint32_t clock;  // Clock frequency in Hz
   bool busStop;  // Flag about releasing bus after end of transmission
-  #if defined(__AVR__)
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   bool busEnabled;  // Flag about bus initialization
-  #endif
+#endif
 } _status;  // Microcontroller status features
 
 
