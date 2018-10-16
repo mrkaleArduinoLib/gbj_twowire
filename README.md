@@ -4,7 +4,7 @@ The library embraces and provides common methods used at every application worki
 - Library specifies (inherits from) the system `TwoWire` library.
 - The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
 - Library implements extended error handling.
-- Library provides some general system methods implemented differently for various platforms, especially Arduino, ESP8266, ESP32, and Particle.
+- Library provides some general system methods implemented differently for various platforms, especially for ones with hardware two-wire bus implementation (Arduino, Particle - Photon, Electron...) and for ones with software (bit-banged) defined two-wire bus (Espressif - ESP8266, ESP32).
 - Library initiates the two-wire bus at default speed (serial clock) **100 kHz**.
 - It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
 - Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
@@ -51,12 +51,14 @@ The library embraces and provides common methods used at every application worki
 
 ### Common errors
 - **gbj\_twowire::ERROR\_ADDRESS**: Platform specific error code at bad address.
+- **gbj\_twowire::ERROR\_PINS**: For software defined two-wire bus platforms at bad defined bus pins (GPIOs), usually both are the same.
 
 
 <a id="interface"></a>
 ## Interface
 - [gbj_twowire()](#gbj_twowire)
 - [~gbj_twowire()](#gbj_twowire)
+- [begin()](#begin)
 - [release()](#release)
 - [busWrite()](#busWrite)
 - [busSend()](#busSend)
@@ -68,6 +70,7 @@ The library embraces and provides common methods used at every application worki
 - [setAddress()](#setAddress)
 - [setBusStop()](#setBusStop)
 - [setBusClock()](#setBusClock)
+- [setPins()](#setPins)
 - [initLastResult()](#initLastResult)
 
 #### Getters
@@ -81,6 +84,8 @@ The library embraces and provides common methods used at every application worki
 - [getAddressMaxUsual()](#getAddressLimits)
 - [getBusStop()](#getBusStop)
 - [getBusClock()](#getBusClock)
+- [getPinSDA()](#getPins)
+- [getPinSCL()](#getPins)
 - [isSuccess()](#isSuccess)
 - [isError()](#isError)
 
@@ -89,13 +94,11 @@ The library embraces and provides common methods used at every application worki
 ## gbj_twowire()
 #### Description
 Destructor `~gbj_twowire()` just releases the two-wire bus.
-Constructor `gbj_twowire()` just creates a class instance object.
-Constructor `gbj_twowire()` creates the class instance object and sets some bus parameters.
-- Constructor parameters can be changed individually later in a sketch, if needed to change them dynamically.
+Constructor `gbj_twowire()` creates the class instance object and sets some bus parameters that are usually constant in a sketch. On the other hand, constructor parameters can be changed individually later in a sketch, if it is needed to change them dynamically.
 - If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
-    gbj_twowire((uint32_t clockSpeed, bool busStop);
+    gbj_twowire((uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL);
 
 #### Parameters
 <a id="prm_busClock"></a>
@@ -111,8 +114,40 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
     - **false**: Keeps connection to the bus and enables to begin further data transmission immediately.
   - *Default value*: true
 
+
+<a id="prm_pinSDA"></a>
+- **pinSDA**: Microcontroller's pin for serial data. It is not a board pin but GPIO number. For hardware two-wire bus platforms it is irrelevant and none of methods utilizes this parameter for such as platforms for communication on the bus. On the other hand, for those platforms the parameters might be utilized for storing some specific attribute in the class instance object.
+  - *Valid values*: positive integer
+  - *Default value*: 4 (GPIO4, D2)
+
+
+<a id="prm_pinSCL"></a>
+- **pinSCL**: Microcontroller's pin for serial clock. It is not a board pin but GPIO number. For hardware two-wire bus platforms it is irrelevant and none of methods utilizes this parameter for such as platforms. On the other hand, for those platforms the parameters might be utilized for storing some specific attribute in the class instance object.
+  - *Valid values*: positive integer
+  - *Default value*: 5 (GPIO5, D1)
+
 #### Returns
 Object performing the extended two-wire bus management.
+The constructor cannot return [a result or error code](#constants) directly, however, it stores them in the instance object. The result can be tested in the operational code with the method [getLastResult()](#getLastResult), [isError()](#isError), or [isSuccess()](#isSuccess).
+
+[Back to interface](#interface)
+
+
+<a id="begin"></a>
+## begin()
+#### Description
+The method checks the microcontroller's pins defined in the [constructor](gbj_twowire) for software defined two-wire bus platforms.
+- The method checks whether pins set by constructor are not mutually equal.
+- For hardware two-wire bus platforms the method ignores defined or default pins.
+
+#### Syntax
+	uint8_t begin();
+
+#### Parameters
+None
+
+#### Returns
+Some of [result or error codes](#constants).
 
 [Back to interface](#interface)
 
@@ -285,6 +320,37 @@ None
 [Back to interface](#interface)
 
 
+<a id="setPins"></a>
+## setPins()
+#### Description
+The method updates the two-wire bus pins in the class instance object only. They take effect at next bus initialization by using method [busSend()](#busSend) or [busReceive()](#busReceive).
+
+#### Syntax
+    void setPins(uint8_t pinSDA, uint8_t pinSCL);
+
+#### Parameters
+<a id="prm_pinSDA"></a>
+- **pinSDA**: Microcontroller's pin for serial data. It is not a board pin but GPIO number. For hardware two-wire bus platforms it is irrelevant and none of methods utilizes this parameter for such as platforms for communication on the bus. On the other hand, for those platforms the parameters might be utilized for storing some specific attribute in the class instance object.
+  - *Valid values*: positive integer
+  - *Default value*: none
+
+
+<a id="prm_pinSCL"></a>
+- **pinSCL**: Microcontroller's pin for serial clock. It is not a board pin but GPIO number. For hardware two-wire bus platforms it is irrelevant and none of methods utilizes this parameter for such as platforms. On the other hand, for those platforms the parameters might be utilized for storing some specific attribute in the class instance object.
+  - *Valid values*: positive integer
+  - *Default value*: none
+
+#### Returns
+Some of [result or error codes](#constants).
+
+#### See also
+[constructor](#gbj_twowire)
+
+[getPinSDA(), getPinSCL()](#getPins)
+
+[Back to interface](#interface)
+
+
 <a id="setLastResult"></a>
 ## setLastResult()
 #### Description
@@ -369,6 +435,8 @@ None
 Current stopping flag.
 
 #### See also
+[constructor](#gbj_twowire)
+
 [setBusStop()](#setBusStop)
 
 [Back to interface](#interface)
@@ -389,7 +457,32 @@ None
 Current two-wire bus clock frequency in Hertz.
 
 #### See also
+[constructor](#gbj_twowire)
+
 [setBusClock()](#setBusStop)
+
+[Back to interface](#interface)
+
+
+<a id="getPins"></a>
+## getPinSDA(), getPinSCL()
+#### Description
+The particular method returns the current pin (GPIO) number defined for the corresponding two-wire bus wire stored in the class instance object.
+
+#### Syntax
+    uint8_t getPinSDA();
+    uint8_t getPinSCL();
+
+#### Parameters
+None
+
+#### Returns
+Current pin (GPIO) number.
+
+#### See also
+[constructor](#gbj_twowire)
+
+[setPins()](#setPins)
 
 [Back to interface](#interface)
 

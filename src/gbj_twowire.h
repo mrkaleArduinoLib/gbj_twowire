@@ -66,6 +66,7 @@ enum ResultCodes
   // Particle custom errors
   ERROR_ADDRESS = ERROR_START,
   #endif
+  ERROR_PINS = 10, // Error defining pins, usually both are the same
 };
 enum ClockSpeed
 {
@@ -99,12 +100,12 @@ enum ClockSpeed
 
   pinSDA - Microcontroller's pin for serial data.
           - Data type: non-negative integer
-          - Default value: D2 (GPIO4)
+          - Default value: 4 (GPIO4, D2)
           - Limited range: 0 ~ 255
 
   pinSCL - Microcontroller's pin for serial clock.
           - Data type: non-negative integer
-          - Default value: D1 (GPIO5)
+          - Default value: 5 (GPIO5, D1)
           - Limited range: 0 ~ 255
 
   RETURN:  object
@@ -124,6 +125,21 @@ gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, bool busStop = true, \
   RETURN:  none
 */
 ~gbj_twowire();
+
+
+/*
+  Initialize two wire bus and check parameters stored by constructor.
+
+  DESCRIPTION:
+  The method validate pin definitions from constructor for software defined
+  I2C bus microcontrollers (ESP8266, ESP32).
+
+  PARAMETERS: none
+
+  RETURN:
+  Result code.
+*/
+uint8_t begin();
 
 
 /*
@@ -240,12 +256,13 @@ uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 
 
 //------------------------------------------------------------------------------
-// Public setters - they usually return result code.
+// Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
 inline void initLastResult() { _status.lastResult = SUCCESS; };
 inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _status.lastResult = lastResult; };
 inline void setBusStop(bool busStop) { _status.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
+uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 
 /*
   Set frequency of the two-wire bus.
@@ -277,6 +294,8 @@ inline uint8_t getAddressMax() { return ADDRESS_MAX; };
 inline uint8_t getAddressMinSpecial() { return ADDRESS_MIN_SPECIAL; };
 inline uint8_t getAddressMinUsual() { return ADDRESS_MIN_USUAL; };
 inline uint8_t getAddressMaxUsual() { return ADDRESS_MAX_USUAL; };
+inline uint8_t getPinSDA() { return _status.pinSDA; };
+inline uint8_t getPinSCL() { return _status.pinSCL; };
 inline uint32_t getBusClock() { return _status.clock; };  // Bus clock frequency in Hz
 inline bool isSuccess() { return _status.lastResult == SUCCESS; } // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation

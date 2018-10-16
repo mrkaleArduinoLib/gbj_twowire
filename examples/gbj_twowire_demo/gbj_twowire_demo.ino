@@ -22,6 +22,7 @@ const byte ADDRESS_DEVICE = 0x23;  // Good
 gbj_twowire Device = gbj_twowire();
 // gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_400KHZ);
 // gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ, false);
+// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ, true, D2, D1);
 
 
 void errorHandler()
@@ -34,6 +35,10 @@ void errorHandler()
   {
     case gbj_twowire::ERROR_ADDRESS:
       Serial.println("Bad address");
+      break;
+
+    case gbj_twowire::ERROR_PINS:
+      Serial.println("Bad pins");
       break;
 
     case gbj_twowire::ERROR_NACK_OTHER:
@@ -50,6 +55,13 @@ void errorHandler()
 void setup()
 {
   Serial.begin(9600);
+  // Test constructor success
+  if (Device.isError())
+  {
+    errorHandler();
+    return;
+  }
+  // Set and test address
   Device.setAddress(ADDRESS_DEVICE);
   if (Device.isError())
   {
@@ -58,10 +70,15 @@ void setup()
   }
   Serial.print("Success: ");
   Serial.println(Device.getLastResult());
-  Serial.print("Bus Clock (Hz): ");
-  Serial.println(Device.getBusClock());
+  Serial.print("Bus Clock: ");
+  Serial.print(Device.getBusClock() / 1000);
+  Serial.println(" kHz");
   Serial.print("Bus Stop: ");
   Serial.println(Device.getBusStop() ? "Yes" : "No");
+  Serial.print("Pin SDA: ");
+  Serial.println(Device.getPinSDA());
+  Serial.print("Pin SCL: ");
+  Serial.println(Device.getPinSCL());
 }
 
 void loop() {}

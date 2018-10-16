@@ -10,6 +10,7 @@ gbj_twowire	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+begin	KEYWORD2
 release	KEYWORD2
 setAddress	KEYWORD2
 setBusStop	KEYWORD2
@@ -24,6 +25,8 @@ getAddressMinSpecial	KEYWORD2
 getAddressMinUsual	KEYWORD2
 getAddressMax	KEYWORD2
 getAddressMaxUsual	KEYWORD2
+getPinSDA	KEYWORD2
+getPinSCL	KEYWORD2
 getLastCommand	KEYWORD2
 getLastResult	KEYWORD2
 isSuccess	KEYWORD2

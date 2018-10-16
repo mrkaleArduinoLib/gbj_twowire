@@ -5,8 +5,7 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 // Constructor
 gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL)
 {
-  _status.pinSDA = pinSDA;
-  _status.pinSCL = pinSCL;
+  setPins(pinSDA, pinSCL);
   setBusClock(clockSpeed);
   setBusStop(busStop);
 }
@@ -16,6 +15,17 @@ gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint
 gbj_twowire::~gbj_twowire()
 {
   release();
+}
+
+
+uint8_t gbj_twowire::begin()
+{
+  initLastResult();
+#if defined(ESP8266) || defined(ESP32)
+  // Check pin duplicity
+  if (_status.pinSDA == _status.pinSCL) return setLastResult(ERROR_PINS);
+#endif
+  return getLastResult();
 }
 
 
@@ -140,6 +150,19 @@ void gbj_twowire::setBusClock(uint32_t clockSpeed)
 }
 
 
+uint8_t gbj_twowire::setPins(uint8_t pinSDA, uint8_t pinSCL)
+{
+  _status.pinSDA = pinSDA;
+  _status.pinSCL = pinSCL;
+  initLastResult();
+#if defined(ESP8266) || defined(ESP32)
+  // Check pin duplicity
+  if (_status.pinSDA == _status.pinSCL) return setLastResult(ERROR_PINS);
+#endif
+  return getLastResult();
+}
+
+
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
@@ -159,20 +182,21 @@ void gbj_twowire::initBus()
   if (!_status.busEnabled)
   {
     setBusClock(_status.clock);
-    begin();
+    Wire.begin();
     _status.busEnabled = true;
   }
 #elif defined(ESP8266) || defined(ESP32)
+  if (!_status.busEnabled)
   {
     setBusClock(_status.clock);
-    begin(_status.pinSDA, _status.pinSCL);
+    Wire.begin(_status.pinSDA, _status.pinSCL);
     _status.busEnabled = true;
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
     setBusClock(_status.clock);
-    begin();
+    Wire.begin();
   }
 #endif
 }
