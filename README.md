@@ -98,7 +98,7 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
 - If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
-    gbj_twowire((uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL);
+    gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL);
 
 #### Parameters
 <a id="prm_busClock"></a>
