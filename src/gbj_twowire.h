@@ -323,15 +323,13 @@ struct
 {
   uint8_t lastResult; // Result of a recent operation
   uint8_t lastCommand;  // Command code recently sent to two-wire bus
-  uint8_t address;  // Address of the device on two-wire bus
+  uint8_t address = 255;  // Address of the device on two-wire bus
   uint32_t clock;  // Clock frequency in Hz
   bool busStop;  // Flag about releasing bus after end of transmission
-#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-  bool busEnabled;  // Flag about bus initialization
-#endif
-#if defined(ESP8266) || defined(ESP32)
   uint8_t pinSDA;  // Pin for serial data
   uint8_t pinSCL;  // Pin for serial clock
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
+  bool busEnabled;  // Flag about bus initialization
 #endif
 } _status;  // Microcontroller status features
 

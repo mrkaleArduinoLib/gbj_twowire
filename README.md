@@ -299,7 +299,7 @@ None
 <a id="setBusClock"></a>
 ## setBusClock()
 #### Description
-The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [busSend()](#busSend) or [busReceive()](#busReceive).
+The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [setAddress()](#setAddress), [busSend()](#busSend), or [busReceive()](#busReceive).
 
 #### Syntax
     void setBusClock(uint32_t clockSpeed);
