@@ -23,7 +23,7 @@ uint8_t gbj_twowire::begin()
   initLastResult();
 #if defined(ESP8266) || defined(ESP32)
   // Check pin duplicity
-  if (_status.pinSDA == _status.pinSCL) return setLastResult(ERROR_PINS);
+  if (_busStatus.pinSDA == _busStatus.pinSCL) return setLastResult(ERROR_PINS);
 #endif
   return getLastResult();
 }
@@ -35,7 +35,7 @@ void gbj_twowire::release()
   end();
 #endif
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-  _status.busEnabled = false;
+  _busStatus.busEnabled = false;
 #endif
 }
 
@@ -119,7 +119,7 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   // No address change
   if (address == getAddress()) return getLastResult();
   // Set changed address
-  _status.address = address;
+  _busStatus.address = address;
 #if defined(__AVR__) || defined(PARTICLE)
   if (!getBusStop()) end();
 #endif
@@ -136,28 +136,28 @@ void gbj_twowire::setBusClock(uint32_t clockSpeed)
   {
     case CLOCK_100KHZ:
     case CLOCK_400KHZ:
-      _status.clock = clockSpeed;
+      _busStatus.clock = clockSpeed;
       break;
     default:
-      _status.clock = CLOCK_100KHZ;
+      _busStatus.clock = CLOCK_100KHZ;
       break;
   };
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-  setClock(_status.clock);
+  setClock(_busStatus.clock);
 #elif defined(PARTICLE)
-  setSpeed(_status.clock);
+  setSpeed(_busStatus.clock);
 #endif
 }
 
 
 uint8_t gbj_twowire::setPins(uint8_t pinSDA, uint8_t pinSCL)
 {
-  _status.pinSDA = pinSDA;
-  _status.pinSCL = pinSCL;
+  _busStatus.pinSDA = pinSDA;
+  _busStatus.pinSCL = pinSCL;
   initLastResult();
 #if defined(ESP8266) || defined(ESP32)
   // Check pin duplicity
-  if (_status.pinSDA == _status.pinSCL) return setLastResult(ERROR_PINS);
+  if (_busStatus.pinSDA == _busStatus.pinSCL) return setLastResult(ERROR_PINS);
 #endif
   return getLastResult();
 }
@@ -179,23 +179,23 @@ void gbj_twowire::initBus()
 {
   initLastResult();
 #if defined(__AVR__)
-  if (!_status.busEnabled)
+  if (!_busStatus.busEnabled)
   {
-    setBusClock(_status.clock);
+    setBusClock(_busStatus.clock);
     Wire.begin();
-    _status.busEnabled = true;
+    _busStatus.busEnabled = true;
   }
 #elif defined(ESP8266) || defined(ESP32)
-  if (!_status.busEnabled)
+  if (!_busStatus.busEnabled)
   {
-    setBusClock(_status.clock);
-    Wire.begin(_status.pinSDA, _status.pinSCL);
-    _status.busEnabled = true;
+    setBusClock(_busStatus.clock);
+    Wire.begin(_busStatus.pinSDA, _busStatus.pinSCL);
+    _busStatus.busEnabled = true;
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
-    setBusClock(_status.clock);
+    setBusClock(_busStatus.clock);
     Wire.begin();
   }
 #endif
