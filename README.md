@@ -40,7 +40,7 @@ The library embraces and provides common methods used at every application worki
 - **gbj\_twowire::ERROR\_BUFFER**: Data too long to fit in transmit buffer.
 - **gbj\_twowire::ERROR\_NACK\_ADDR**: Received NACK on transmit of address.
 - **gbj\_twowire::ERROR\_NACK\_DATA**: Received NACK on transmit of data.
-- **gbj\_twowire::ERROR\_OTHER**:  Other error.
+- **gbj\_twowire::ERROR\_NACK\_OTHER**:  Other error.
 
 ### Particle error codes
 - **gbj\_twowire::ERROR\_BUSY**: Busy timeout upon entering `endTransmission()`.
