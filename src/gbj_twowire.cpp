@@ -50,7 +50,7 @@ uint8_t gbj_twowire::busWrite(uint16_t data)
   {
     countByte += platformWrite(dataByte);
   }
-  // Write LSB allways
+  // Write LSB always
   dataByte = (uint8_t) (data & 0x00FF);
   countByte += platformWrite(dataByte);
   return countByte;
@@ -101,6 +101,16 @@ uint8_t gbj_twowire::busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t star
     }
   }
   setLastResult(endTransmission(getBusStop()));
+  return getLastResult();
+}
+
+
+uint8_t gbj_twowire::busGeneralReset()
+{
+  initBus();
+  beginTransmission(ADDRESS_GENCALL);
+  busWrite(GENCALL_RESET);
+  if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
   return getLastResult();
 }
 

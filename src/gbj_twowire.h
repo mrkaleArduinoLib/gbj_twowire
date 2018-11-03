@@ -255,6 +255,22 @@ uint8_t busRead();
 uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 
 
+/*
+  Send software reset command to general call address.
+
+  DESCRIPTION:
+  The method sends command 0x06 to the general call address 0x00 in order to
+  execute software reset of all devices on the two-wire bus that have this
+  functionality implemented.
+
+  PARAMETERS: none
+
+  RETURN:
+  Result code.
+*/
+uint8_t busGeneralReset();
+
+
 //------------------------------------------------------------------------------
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
@@ -313,6 +329,12 @@ enum AddressRange
   ADDRESS_MIN_SPECIAL = 0x01,  // Minimal special purposes address
   ADDRESS_MIN_USUAL = 0x03,  // Minimal usual address
   ADDRESS_MAX_USUAL = 0x77,  // Maximal usual address
+  ADDRESS_GENCALL = 0x00,  // General call address
+};
+enum GeneralCall
+{
+  GENCALL_RESET = 0x06,  // Software reset and write programmable part of slave address
+  GENCALL_WRITE = 0x04,  // Write programmable part of slave address only
 };
 
 
