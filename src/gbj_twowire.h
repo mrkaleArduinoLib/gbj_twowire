@@ -206,6 +206,7 @@ uint8_t busWrite(uint16_t data);
   RETURN:
   Result code.
 */
+uint8_t busSend(uint8_t* dataBuffer, uint16_t dataLength)
 uint8_t busSend(uint16_t command, uint16_t data);
 uint8_t busSend(uint16_t data);
 

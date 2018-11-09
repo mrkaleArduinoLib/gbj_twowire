@@ -5,9 +5,9 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 // Constructor
 gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL)
 {
-  setPins(pinSDA, pinSCL);
   setBusClock(clockSpeed);
   setBusStop(busStop);
+  setPins(pinSDA, pinSCL);
 }
 
 
@@ -20,7 +20,7 @@ gbj_twowire::~gbj_twowire()
 
 uint8_t gbj_twowire::begin()
 {
-  initLastResult();
+  initBus();
 #if defined(ESP8266) || defined(ESP32)
   // Check pin duplicity
   if (_status.pinSDA == _status.pinSCL) return setLastResult(ERROR_PINS);
@@ -57,9 +57,28 @@ uint8_t gbj_twowire::busWrite(uint16_t data)
 }
 
 
+uint8_t gbj_twowire::busSend(uint8_t* dataBuffer, uint16_t dataLength)
+{
+  initLastResult();
+  while (dataLength)
+  {
+    beginTransmission(getAddress());
+    uint8_t packetLength = BUFFER_LENGTH;
+    while (packetLength > 0 && dataLength > 0)
+    {
+      busWrite(*dataBuffer++);
+      packetLength--;
+      dataLength--;
+    }
+    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+  }
+  return getLastResult();
+}
+
+
 uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
 {
-  initBus();
+  initLastResult();
   beginTransmission(getAddress());
   busWrite(setLastCommand(command));
   busWrite(data);
@@ -70,7 +89,7 @@ uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
 
 uint8_t gbj_twowire::busSend(uint16_t data)
 {
-  initBus();
+  initLastResult();
   beginTransmission(getAddress());
   busWrite(data);
   if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
@@ -90,7 +109,7 @@ uint8_t gbj_twowire::busRead()
 
 uint8_t gbj_twowire::busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start)
 {
-  initBus();
+  initLastResult();
   beginTransmission(getAddress());
   if (requestFrom(getAddress(), bytes, (uint8_t) getBusStop()) > 0 \
   && available() >= bytes)
@@ -123,7 +142,6 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
 #if defined(__AVR__) || defined(PARTICLE)
   if (!getBusStop()) end();
 #endif
-  initBus();
   beginTransmission(getAddress());
   setLastResult(endTransmission(getBusStop()));
   return getLastResult();
@@ -166,7 +184,6 @@ uint8_t gbj_twowire::setPins(uint8_t pinSDA, uint8_t pinSCL)
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
-// Wait for delay period expiry
 void gbj_twowire::wait(uint32_t delay)
 {
   uint32_t timestamp = millis();
@@ -181,21 +198,18 @@ void gbj_twowire::initBus()
 #if defined(__AVR__)
   if (!_status.busEnabled)
   {
-    setBusClock(_status.clock);
     Wire.begin();
     _status.busEnabled = true;
   }
 #elif defined(ESP8266) || defined(ESP32)
   if (!_status.busEnabled)
   {
-    setBusClock(_status.clock);
     Wire.begin(_status.pinSDA, _status.pinSCL);
     _status.busEnabled = true;
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
-    setBusClock(_status.clock);
     Wire.begin();
   }
 #endif
