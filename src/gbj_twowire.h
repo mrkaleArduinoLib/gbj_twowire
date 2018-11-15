@@ -179,7 +179,7 @@ void release();
 uint8_t busSendStream(uint8_t* dataBuffer, uint16_t dataLen, bool dataReverse = false);
 
 uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, \
-  uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse);
+  uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime = false);
 
 /*
   Send one or two bytes to the two-wire bus.
@@ -240,26 +240,21 @@ uint8_t busRead();
   array defined by an input pointer.
 
   PARAMETERS:
-  dataArray - Pointer to an array of bytes for storing read data. The array
-              should be enough large for storing all read bytes.
-              - Data type: array of non-negative integer
-              - Default value: none
-              - Limited range: platform specific address space
+  dataBuffer - Pointer to an array of bytes for storing read data. The array
+               should be enough large for storing all read bytes.
+               - Data type: array of non-negative integer
+               - Default value: none
+               - Limited range: platform specific address space
 
-  bytes - Number of bytes to be read.
-          - Data type: non-negative integer
-          - Default value: none
-          - Limited range: 0 ~ 255
-
-  start - The array index where to start storing read bytes.
-          - Data type: non-negative integer
-          - Default value: 0
-          - Limited range: 0 ~ 255
+  dataLen - Number of bytes to be read.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 255
 
   RETURN:
-  Result code and read data bytes in the input array at success.
+  Result code.
 */
-uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
+uint8_t busReceive(uint8_t *dataBuffer, uint16_t dataLen);
 
 
 /*
@@ -357,7 +352,8 @@ struct
   bool busStop;  // Flag about releasing bus after end of transmission
   uint8_t pinSDA;  // Pin for serial data
   uint8_t pinSCL;  // Pin for serial clock
-  uint32_t delaySend = 0;  // Waiting after each sent page to bus
+  uint32_t sendDelay = 0;  // Waiting after each sent page to bus in milliseconds
+  uint32_t sendTimestamp = 0;  // Timestamp of recent bus send in milliseconds
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   bool busEnabled;  // Flag about bus initialization
 #endif
@@ -375,13 +371,15 @@ protected:
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
-inline void setDelaySend(uint32_t delay) { _busStatus.delaySend = delay; };  // Sending page delay in milliseconds
-inline uint32_t getDelaySend() { return _busStatus.delaySend; };
+inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; };  // Sending page delay in milliseconds
+inline uint32_t getDelaySend() { return _busStatus.sendDelay; };
+
+
 /*
   Wait for a period of time.
 
   DESCRIPTION:
-  The method wait in the loop until input delay expires.
+  The method waits in the loop until input delay expires.
 
   PARAMETERS:
   delay - Waiting time period in milliseconds.
