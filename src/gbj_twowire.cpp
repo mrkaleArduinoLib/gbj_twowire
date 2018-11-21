@@ -67,7 +67,7 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
 }
 
 
-uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t* dataBuffer, uint16_t dataLen, bool dataReverse, \
+uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, \
   uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime)
 {
   bool prfxExec = true;

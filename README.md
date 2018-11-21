@@ -3,9 +3,10 @@
 The library embraces and provides common methods used at every application working with sensor on two-wire (I2C) bus.
 - Library specifies (inherits from) the system `TwoWire` library.
 - The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
+- Library respects two-wire buffer length (32 byte) at communication on the bus by paging, so that it splits long byte streams into separate transactions.
 - Library implements extended error handling.
 - Library provides some general system methods implemented differently for various platforms, especially for ones with hardware two-wire bus implementation (Arduino, Particle - Photon, Electron...) and for ones with software (bit-banged) defined two-wire bus (Espressif - ESP8266, ESP32).
-- Library initiates the two-wire bus at default speed (serial clock) **100 kHz**.
+- Library initiates the two-wire bus at default speed (serial clock) **100 kHz**, but bus speed can be change dynamically.
 - It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
 - Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
 - Library allows address range 0x00 ~ 0x7F.
@@ -60,7 +61,8 @@ The library embraces and provides common methods used at every application worki
 - [~gbj_twowire()](#gbj_twowire)
 - [begin()](#begin)
 - [release()](#release)
-- [busWrite()](#busWrite)
+- [busSendStream()](#busSendStream)
+- [busSendStreamPrefixed()](#busSendStreamPrefixed)
 - [busSend()](#busSend)
 - [busRead()](#busRead)
 - [busReceive()](#busReceive)
@@ -90,6 +92,12 @@ The library embraces and provides common methods used at every application worki
 - [isSuccess()](#isSuccess)
 - [isError()](#isError)
 
+#### Protected
+- [setDelaySend()](#setDelaySend)
+- [getDelaySend()](#getDelaySend)
+- [wait()](#wait)
+- [initBus()](#initBus)
+
 
 <a id="gbj_twowire"></a>
 ## gbj_twowire()
@@ -103,7 +111,7 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
 
 #### Parameters
 <a id="prm_busClock"></a>
-- **clockSpeed**: Two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
+- **clockSpeed**: Initial two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
   - *Valid values*: gbj\_twowire::CLOCK\_100KHZ, gbj\_twowire::CLOCK\_400KHZ
   - *Default value*: gbj\_twowire::CLOCK\_100KHZ
 
@@ -556,27 +564,101 @@ Recently used command code.
 [Back to interface](#interface)
 
 
-<a id="busWrite"></a>
-## busWrite()
+<a id="busSendStream"></a>
+## busSendStream()
 #### Description
-The method writes one or two byte integer data to the two-wire bus.
-- If the most significant byte (the first one from the left) is non-zero, the data is written as two subsequent bytes.
-- If the most significant byte is zero, the data is written as its least significant byte (the right most one).
+The method sends input data byte stream to the two-wire bus chunked by parent library two-wire data buffer length (paging).
+- If there is a send delay defined, the method waits for that time period expiration before sending next chunk (page).
+- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after sending to the bus, which might last the desired delay, so that the method does not block the system uselessly.
 
 #### Syntax
-    uint8_t busWrite(uint16_t data);
+    uint8_t busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse);
 
 #### Parameters
-<a id="prm_data"></a>
-- **data**: Data word or byte to be written.
+- **dataBuffer**: Pointer to the byte data buffer.
+  - *Valid values*: address space
+  - *Default value*: none
+
+
+- **dataLen**: Number of bytes to be sent from the data buffer to the bus.
   - *Valid values*: non-negative integer 0 ~ 65535
   - *Default value*: none
 
+
+- **dataReverse**: Flag about sending the data buffer in reverse order from very last byte (determined by *dataLen*) to the very first byte.
+  - *Valid values*: Boolean
+    - *false*: sending from the first to the last byte order
+    - *true*: sending from the last to the first byte order
+  - *Default value*: false
+
 #### Returns
-Number of transmitted bytes.
+Some of [result or error codes](#constants).
 
 #### See also
+[busSendStreamPrefixed()](#busSendStreamPrefixed)
+
 [busSend()](#busSend)
+
+[Back to interface](#interface)
+
+
+<a id="busSendStreamPrefixed"></a>
+## busSendStreamPrefixed()
+#### Description
+The method sends input data byte array to the two-wire prefixed with prefix buffer.
+- The method chunks sent byte stream including prefix by parent library two-wire data buffer length (paging).
+- If there is a send delay defined, the method waits for that time period expiration before sending next chunk (page).
+- The prefix may be a one-time one, which is used just with the very first chunk only.
+
+#### Syntax
+    uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime);
+
+#### Parameters
+- **dataBuffer**: Pointer to the byte data buffer.
+  - *Valid values*: address space
+  - *Default value*: none
+
+
+- **dataLen**: Number of bytes to be sent from the data buffer to the bus.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+
+- **dataReverse**: Flag about sending the data buffer in reverse order from very last byte (determined by *dataLen*) to the very first byte.
+  - *Valid values*: Boolean
+    - *false*: sending from the first to the last byte order
+    - *true*: sending from the last to the first byte order
+  - *Default value*: none
+
+
+- **prfxBuffer**: Pointer to the prefix byte buffer, which precedes sending each or the first data buffer page.
+  - *Valid values*: address space
+  - *Default value*: none
+
+
+- **prfxLen**: Number of bytes to be sent from the prefix buffer to the bus. At repeating prefix (non one-time) it is reasonable, if the prefix length is less than two-wire buffer length (usually 32 bytes), otherwise only that prefix is sent to the bus due to paging.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+
+- **prfxReverse**: Flag about sending the prefix buffer in reverse order from very last byte (determined by *prfxLen*) to the very first byte.
+  - *Valid values*: Boolean
+    - *false*: sending from the first to the last byte order
+    - *true*: sending from the last to the first byte order
+  - *Default value*: none
+
+
+- **prfxOnetime**: Flag about sending the prefix buffer just once before the very first sending the data buffer.
+  - *Valid values*: Boolean
+    - *false*: prefix buffer sent before each data buffer page
+    - *true*: prefix buffer sent once before start of sending data buffer
+  - *Default value*: false
+
+#### Returns
+Some of [result or error codes](#constants).
+
+#### See also
+[busSendStream()](#busSendStream)
 
 [Back to interface](#interface)
 
@@ -607,7 +689,7 @@ The method sends input data to the two-wire bus as one communication transaction
 Some of [result or error codes](#constants).
 
 #### See also
-[busWrite()](#busWrite)
+[busSendStream()](#busSendStream)
 
 [Back to interface](#interface)
 
@@ -635,26 +717,20 @@ Data byte read from the bus.
 <a id="busReceive"></a>
 ## busReceive()
 #### Description
-The method reads multiple bytes from the two-wire bus and places them to the array defined by an input pointer.
-- The read bytes are put into the input array from starting index or from the beginning.
+The method reads a byte stream from the two-wire bus chunked by parent library two-wire data buffer length (paging) and places them to the buffer defined by an input pointer.
 
 #### Syntax
-    uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start);
+    uint8_t busReceive(uint8_t *dataBuffer, uint16_t dataLen);
 
 #### Parameters
-- **dataArray**: Pointer to an array of bytes for storing read data. The array should be enough large for storing all read bytes.
-  - *Valid values*: address  specific for the current platform of an array of non-negative integers each 0 ~ 255
+- **dataBuffer**: Pointer to a byte buffer for storing read data. The buffer should be enough large for storing all read bytes.
+  - *Valid values*: address space
   - *Default value*: none
 
 
-- **bytes**: Number of bytes to be read.
-  - *Valid values*: non-negative integer 0 ~ 255
+- **dataLen**: Number of bytes to be read.
+  - *Valid values*: non-negative integer 0 ~ 65535
   - *Default value*: none
-
-
-- **start**: The array index where to start storing read bytes.
-  - *Valid values*: non-negative integer 0 ~ 255
-  - *Default value*: 0
 
 #### Returns
 Some of [result or error codes](#constants).
@@ -668,22 +744,6 @@ if (Object.busReceive(data, sizeof(data)/sizeof(data[0])))
   Serial.println("Data:");
   Serial.println(data[0]);
   Serial.println(data[1]);
-}
-else
-{
-  Serial.print("Error: ");
-  Serial.println(Object.getLastResult());
-}
-```
-
-```cpp
-gbj_twowire Object = gbj_twowire();
-uint8_t data[5];
-if (Object.busReceive(data, 2, 3))
-{
-  Serial.println("Data:");
-  Serial.println(data[3]);
-  Serial.println(data[4]);
 }
 else
 {
@@ -711,5 +771,86 @@ None
 
 #### Returns
 Some of [result or error codes](#constants).
+
+[Back to interface](#interface)
+
+
+<a id="setDelaySend"></a>
+## setDelaySend()
+#### Description
+The method sets delay for waiting before subsequent sending transaction until that time period expires from finishing previous sending transaction.
+- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after sending to the bus, which might last the desired delay, so that the method does not block the system uselessly.
+
+#### Syntax
+    void setDelaySend(uint32_t delay);
+
+#### Parameters
+- **delay**: Delaying time period in milliseconds.
+  - *Valid values*: 32 bit unsigned integer.
+  - *Default value*: none
+
+#### Returns
+None
+
+#### See also
+[getDelaySend()](#getDelaySend)
+
+[busSendStream()](#busSendStream)
+
+[Back to interface](#interface)
+
+
+<a id="getDelaySend"></a>
+## getDelaySend()
+#### Description
+The method returns the current sending delay stored in the class instance object.
+
+#### Syntax
+    uint32_t getDelaySend();
+
+#### Parameters
+None
+
+#### Returns
+Current sending delay in milliseconds.
+
+#### See also
+[setDelaySend()](#setDelaySend)
+
+[Back to interface](#interface)
+
+
+<a id="wait"></a>
+## wait()
+#### Description
+The method waits in the loop until input delay expires.
+
+#### Syntax
+    void wait(uint32_t delay);
+
+#### Parameters
+- **delay**: Waiting time period in milliseconds.
+  - *Valid values*: 32 bit unsigned integer.
+  - *Default value*: none
+
+#### Returns
+None
+
+[Back to interface](#interface)
+
+
+<a id="initBus"></a>
+## initBus()
+#### Description
+The method starts two-wire bus, if it is not yet and sets up the flag about it in order not to start the bus again.
+
+#### Syntax
+    void initBus();
+
+#### Parameters
+None
+
+#### Returns
+None
 
 [Back to interface](#interface)

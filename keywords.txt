@@ -15,6 +15,8 @@ release	KEYWORD2
 setAddress	KEYWORD2
 setBusStop	KEYWORD2
 setBusClock	KEYWORD2
+setPins	KEYWORD2
+setDelaySend	KEYWORD2
 setLastCommand	KEYWORD2
 initLastResult	KEYWORD2
 getBusClock	KEYWORD2
@@ -29,13 +31,17 @@ getPinSDA	KEYWORD2
 getPinSCL	KEYWORD2
 getLastCommand	KEYWORD2
 getLastResult	KEYWORD2
+getDelaySend	KEYWORD2
 isSuccess	KEYWORD2
 isError	KEYWORD2
-busWrite	KEYWORD2
+busSendStream	KEYWORD2
+busSendStreamPrefixed	KEYWORD2
 busSend	KEYWORD2
 busRead	KEYWORD2
 busReceive	KEYWORD2
 busGeneralReset	KEYWORD2
+wait	KEYWORD2
+initBus	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

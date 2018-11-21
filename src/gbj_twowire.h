@@ -87,8 +87,8 @@ enum ClockSpeed
   to change them dynamically.
 
   PARAMETERS:
-  clockSpeed - Two-wire bus clock frequency in Hertz. If the clock is not from
-               enumeration, it fallbacks to 100 kHz.
+  clockSpeed - Initial two-wire bus clock frequency in Hertz. If the clock is
+               not from enumeration, it fallbacks to 100 kHz.
                - Data type: long
                - Default value: CLOCK_100KHZ
                - Limited range: CLOCK_100KHZ, CLOCK_400KHZ
@@ -159,27 +159,105 @@ void release();
   Send byte stream to the two-wire bus.
 
   DESCRIPTION:
-  The method sends input data byte array to the two-wire bus chunked by parent
-  library data buffer length.
+  The method sends input data byte stream to the two-wire bus chunked by parent
+  library two-wire data buffer length (paging).
+  - If there is a send delay defined, the method waits for that time period
+    expiration before sending next chunk (page).
 
   PARAMETERS:
-  dataBuffer - Pointer to the byte data buffer array.
-              - Data type: non-negative integer
-              - Default value: none
-              - Limited range: address space
+  dataBuffer - Pointer to the byte data buffer.
+               - Data type: non-negative integer
+               - Default value: none
+               - Limited range: address space
 
   dataLen - Number of bytes to be sent from the data buffer to the bus.
             - Data type: non-negative integer
             - Default value: none
             - Limited range: 0 ~ 65535
 
+  dataReverse - Flag about sending the data buffer in reverse order from very
+                last byte (determined by dataLen) to the very first byte.
+                - Data type: boolean
+                - Default value: false
+                - Limited range:
+                  false: sending from the first to the last byte order
+                  true: sending from the last to the first byte order
+
   RETURN:
   Result code.
 */
-uint8_t busSendStream(uint8_t* dataBuffer, uint16_t dataLen, bool dataReverse = false);
+uint8_t busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse = false);
 
+
+/*
+  Send prefixed byte stream to the two-wire bus.
+
+  DESCRIPTION:
+  The method sends input data byte array to the two-wire prefixed with prefix
+  buffer.
+  - The method chunks sent byte stream including prefix by parent library
+    two-wire data buffer length (paging).
+  - If there is a send delay defined, the method waits for that time period
+    expiration before sending next chunk (page).
+  - The prefix may be a one-time one, which is used just with the very first
+    chunk only.
+
+  PARAMETERS:
+  dataBuffer - Pointer to the byte data buffer.
+               - Data type: non-negative integer
+               - Default value: none
+               - Limited range: address space
+
+  dataLen - Number of bytes to be sent from the data buffer to the bus.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 65535
+
+  dataReverse - Flag about sending the data buffer in reverse order from very
+                last byte (determined by dataLen) to the very first byte.
+                - Data type: boolean
+                - Default value: none
+                - Limited range:
+                  false: sending from the first to the last byte order
+                  true: sending from the last to the first byte order
+
+  prfxBuffer - Pointer to the prefix byte buffer, which precedes sending each
+               or the first data buffer page.
+               - Data type: non-negative integer
+               - Default value: none
+               - Limited range: address space
+
+  prfxLen - Number of bytes to be sent from the prefix buffer to the bus.
+            At repeating prefix (non one-time) it is reasonable, if the prefix
+            length is less than two-wire buffer length (usually 32 bytes),
+            otherwise only that prefix is sent to the bus due to paging.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 65535
+
+  prfxReverse - Flag about sending the prefix buffer in reverse order from very
+                last byte (determined by prfxLen) to the very first byte.
+                - Data type: boolean
+                - Default value: none
+                - Limited range:
+                  false: sending from the first to the last byte order
+                  true: sending from the last to the first byte order
+
+  prfxOnetime - Flag about sending the prefix buffer just once before the very
+                first sending the data buffer.
+                - Data type: boolean
+                - Default value: false
+                - Limited range:
+                  false: prefix buffer sent before each data buffer page
+                  true: prefix buffer sent once before start of sending data
+                        buffer
+
+  RETURN:
+  Result code.
+*/
 uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, \
   uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime = false);
+
 
 /*
   Send one or two bytes to the two-wire bus.
@@ -217,6 +295,7 @@ uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataRe
 uint8_t busSend(uint16_t command, uint16_t data);
 uint8_t busSend(uint16_t data);
 
+
 /*
   Read one byte from the two-wire bus.
 
@@ -233,23 +312,24 @@ uint8_t busRead();
 
 
 /*
-  Read multiple bytes from the two-wire bus.
+  Read byte stream from the two-wire bus.
 
   DESCRIPTION:
-  The method reads multiple bytes from the two-wire bus and places them to the
-  array defined by an input pointer.
+  The method reads a byte stream from the two-wire bus chunked by parent
+  library two-wire data buffer length (paging) and places them to the
+  buffer defined by an input pointer.
 
   PARAMETERS:
-  dataBuffer - Pointer to an array of bytes for storing read data. The array
+  dataBuffer - Pointer to a byte buffer for storing read data. The buffer
                should be enough large for storing all read bytes.
-               - Data type: array of non-negative integer
+               - Data type: non-negative integer
                - Default value: none
-               - Limited range: platform specific address space
+               - Limited range: address space
 
   dataLen - Number of bytes to be read.
             - Data type: non-negative integer
             - Default value: none
-            - Limited range: 0 ~ 255
+            - Limited range: 0 ~ 65535
 
   RETURN:
   Result code.
@@ -371,7 +451,23 @@ protected:
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
-inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; };  // Sending page delay in milliseconds
+/*
+  Set delay for waiting after each send transaction to settle a device.
+
+  DESCRIPTION:
+  If a delay value is set, than the library waits before subsequent sending
+  transaction until that time period expires from finishing previous sending
+  transaction.
+
+  PARAMETERS:
+  delay - Delaying time period in milliseconds.
+          - Data type: non-negative integer
+          - Default value: none
+          - Limited range: 0 ~ 2^32 - 1
+
+  RETURN: none
+*/
+inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; };
 inline uint32_t getDelaySend() { return _busStatus.sendDelay; };
 
 
