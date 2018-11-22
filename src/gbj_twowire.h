@@ -256,12 +256,28 @@ uint8_t busRead();
 uint8_t busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start = 0);
 
 
+/*
+  Send software reset command to general call address.
+
+  DESCRIPTION:
+  The method sends command 0x06 to the general call address 0x00 in order to
+  execute software reset of all devices on the two-wire bus that have this
+  functionality implemented.
+
+  PARAMETERS: none
+
+  RETURN:
+  Result code.
+*/
+uint8_t busGeneralReset();
+
+
 //------------------------------------------------------------------------------
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
-inline void initLastResult() { _status.lastResult = SUCCESS; };
-inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _status.lastResult = lastResult; };
-inline void setBusStop(bool busStop) { _status.busStop = busStop; };
+inline void initLastResult() { _busStatus.lastResult = SUCCESS; };
+inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _busStatus.lastResult = lastResult; };
+inline void setBusStop(bool busStop) { _busStatus.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 
@@ -287,20 +303,20 @@ void setBusClock(uint32_t clockSpeed);
 //------------------------------------------------------------------------------
 // Public getters
 //------------------------------------------------------------------------------
-inline uint8_t getLastResult() { return _status.lastResult; }; // Result of a recent operation
-inline uint8_t getLastCommand() { return _status.lastCommand; }; // Command code of a recent operation
-inline uint8_t getAddress() { return _status.address; };  // Current device address
+inline uint8_t getLastResult() { return _busStatus.lastResult; }; // Result of a recent operation
+inline uint8_t getLastCommand() { return _busStatus.lastCommand; }; // Command code of a recent operation
+inline uint8_t getAddress() { return _busStatus.address; };  // Current device address
 inline uint8_t getAddressMin() { return ADDRESS_MIN; };  // Adress limits...
 inline uint8_t getAddressMax() { return ADDRESS_MAX; };
 inline uint8_t getAddressMinSpecial() { return ADDRESS_MIN_SPECIAL; };
 inline uint8_t getAddressMinUsual() { return ADDRESS_MIN_USUAL; };
 inline uint8_t getAddressMaxUsual() { return ADDRESS_MAX_USUAL; };
-inline uint8_t getPinSDA() { return _status.pinSDA; };
-inline uint8_t getPinSCL() { return _status.pinSCL; };
-inline uint32_t getBusClock() { return _status.clock; };  // Bus clock frequency in Hz
-inline bool isSuccess() { return _status.lastResult == SUCCESS; } // Flag about successful recent operation
+inline uint8_t getPinSDA() { return _busStatus.pinSDA; };
+inline uint8_t getPinSCL() { return _busStatus.pinSCL; };
+inline uint32_t getBusClock() { return _busStatus.clock; };  // Bus clock frequency in Hz
+inline bool isSuccess() { return _busStatus.lastResult == SUCCESS; } // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
-inline bool getBusStop() { return _status.busStop; };  // Flag about current bus releasing
+inline bool getBusStop() { return _busStatus.busStop; };  // Flag about current bus releasing
 
 
 private:
@@ -314,6 +330,12 @@ enum AddressRange
   ADDRESS_MIN_SPECIAL = 0x01,  // Minimal special purposes address
   ADDRESS_MIN_USUAL = 0x03,  // Minimal usual address
   ADDRESS_MAX_USUAL = 0x77,  // Maximal usual address
+  ADDRESS_GENCALL = 0x00,  // General call address
+};
+enum GeneralCall
+{
+  GENCALL_RESET = 0x06,  // Software reset and write programmable part of slave address
+  GENCALL_WRITE = 0x04,  // Write programmable part of slave address only
 };
 
 
@@ -324,23 +346,21 @@ struct
 {
   uint8_t lastResult; // Result of a recent operation
   uint8_t lastCommand;  // Command code recently sent to two-wire bus
-  uint8_t address;  // Address of the device on two-wire bus
+  uint8_t address = 255;  // Address of the device on two-wire bus
   uint32_t clock;  // Clock frequency in Hz
   bool busStop;  // Flag about releasing bus after end of transmission
+  uint8_t pinSDA;  // Pin for serial data
+  uint8_t pinSCL;  // Pin for serial clock
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   bool busEnabled;  // Flag about bus initialization
 #endif
-#if defined(ESP8266) || defined(ESP32)
-  uint8_t pinSDA;  // Pin for serial data
-  uint8_t pinSCL;  // Pin for serial clock
-#endif
-} _status;  // Microcontroller status features
+} _busStatus;  // Microcontroller status features
 
 
 //------------------------------------------------------------------------------
 // Private methods
 //------------------------------------------------------------------------------
-inline uint8_t setLastCommand(uint8_t lastCommand) { return _status.lastCommand = lastCommand; };
+inline uint8_t setLastCommand(uint8_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
 uint8_t platformWrite(uint8_t data);
 
 

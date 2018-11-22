@@ -35,6 +35,7 @@ busWrite	KEYWORD2
 busSend	KEYWORD2
 busRead	KEYWORD2
 busReceive	KEYWORD2
+busGeneralReset	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

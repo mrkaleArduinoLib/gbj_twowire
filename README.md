@@ -9,7 +9,7 @@ The library embraces and provides common methods used at every application worki
 - It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
 - Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
 - Library allows address range 0x00 ~ 0x7F.
-
+- Library utilizes the general call on the two-wire bus as well.
 
 
 <a id="dependency"></a>
@@ -40,7 +40,7 @@ The library embraces and provides common methods used at every application worki
 - **gbj\_twowire::ERROR\_BUFFER**: Data too long to fit in transmit buffer.
 - **gbj\_twowire::ERROR\_NACK\_ADDR**: Received NACK on transmit of address.
 - **gbj\_twowire::ERROR\_NACK\_DATA**: Received NACK on transmit of data.
-- **gbj\_twowire::ERROR\_OTHER**:  Other error.
+- **gbj\_twowire::ERROR\_NACK\_OTHER**:  Other error.
 
 ### Particle error codes
 - **gbj\_twowire::ERROR\_BUSY**: Busy timeout upon entering `endTransmission()`.
@@ -64,6 +64,7 @@ The library embraces and provides common methods used at every application worki
 - [busSend()](#busSend)
 - [busRead()](#busRead)
 - [busReceive()](#busReceive)
+- [busGeneralReset()](#busGeneralReset)
 
 #### Setters
 - [setLastResult()](#setLastResult)
@@ -299,7 +300,7 @@ None
 <a id="setBusClock"></a>
 ## setBusClock()
 #### Description
-The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [busSend()](#busSend) or [busReceive()](#busReceive).
+The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [setAddress()](#setAddress), [busSend()](#busSend), or [busReceive()](#busReceive).
 
 #### Syntax
     void setBusClock(uint32_t clockSpeed);
@@ -693,5 +694,22 @@ else
 
 #### See also
 [busRead()](#busRead)
+
+[Back to interface](#interface)
+
+
+<a id="busGeneralReset"></a>
+## busGeneralReset()
+#### Description
+The method sends command 0x06 to the general call address 0x00 in order to execute software reset of all devices on the two-wire bus that have this functionality implemented.
+
+#### Syntax
+    uint8_t busGeneralReset();
+
+#### Parameters
+None
+
+#### Returns
+Some of [result or error codes](#constants).
 
 [Back to interface](#interface)
