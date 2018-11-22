@@ -40,60 +40,94 @@ void gbj_twowire::release()
 }
 
 
-uint8_t gbj_twowire::busWrite(uint16_t data)
-{
-  uint8_t countByte = 0;
-  uint8_t dataByte;
-  // Write MSB of a word if not zero
-  dataByte = (uint8_t) (data >> 8);
-  if (dataByte > 0x00)
-  {
-    countByte += platformWrite(dataByte);
-  }
-  // Write LSB always
-  dataByte = (uint8_t) (data & 0x00FF);
-  countByte += platformWrite(dataByte);
-  return countByte;
-}
-
-
-uint8_t gbj_twowire::busSend(uint8_t* dataBuffer, uint16_t dataLength)
+uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse)
 {
   initLastResult();
-  while (dataLength)
+  if (dataReverse)
   {
+    dataBuffer += dataLen;
+    dataBuffer--;
+  }
+  while (dataLen)
+  {
+    uint8_t pageLen = BUFFER_LENGTH;
+    while (millis() - _busStatus.sendTimestamp < getDelaySend());
     beginTransmission(getAddress());
-    uint8_t packetLength = BUFFER_LENGTH;
-    while (packetLength > 0 && dataLength > 0)
+    while (pageLen > 0 && dataLen > 0)
     {
-      busWrite(*dataBuffer++);
-      packetLength--;
-      dataLength--;
+      if (dataReverse) platformWrite(*dataBuffer--);
+      else             platformWrite(*dataBuffer++);
+      pageLen--;
+      dataLen--;
     }
     if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+    _busStatus.sendTimestamp = millis();
   }
   return getLastResult();
 }
 
 
-uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
+uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, \
+  uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime)
 {
+  bool prfxExec = true;
   initLastResult();
-  beginTransmission(getAddress());
-  busWrite(setLastCommand(command));
-  busWrite(data);
-  if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+  if (dataReverse)
+  {
+    dataBuffer += dataLen;
+    dataBuffer--;
+  }
+  if (prfxReverse)
+  {
+    prfxBuffer += prfxLen;
+    prfxBuffer--;
+  }
+  while (dataLen)
+  {
+    uint8_t pageLen = BUFFER_LENGTH;
+    while (millis() - _busStatus.sendTimestamp < getDelaySend());
+    beginTransmission(getAddress());
+    // Injected prefix stream in every page
+    if (prfxExec)
+    {
+      uint16_t prfxLenPage = prfxLen;
+      uint8_t *prfxBufferPage = prfxBuffer;
+      while (pageLen > 0 && prfxLenPage > 0)
+      {
+        if (prfxReverse) platformWrite(*prfxBufferPage--);
+        else             platformWrite(*prfxBufferPage++);
+        pageLen--;
+        prfxLenPage--;
+      }
+      if (prfxOnetime) prfxExec = false;
+    }
+    // Main data stream
+    while (pageLen > 0 && dataLen > 0)
+    {
+      if (dataReverse) platformWrite(*dataBuffer--);
+      else             platformWrite(*dataBuffer++);
+      pageLen--;
+      dataLen--;
+    }
+    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+    _busStatus.sendTimestamp = millis();
+  }
   return getLastResult();
 }
 
 
 uint8_t gbj_twowire::busSend(uint16_t data)
 {
-  initLastResult();
-  beginTransmission(getAddress());
-  busWrite(data);
-  if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
-  return getLastResult();
+  uint8_t *ptrData = (uint8_t*)&data;
+  if (data < 0x100) return busSendStream(ptrData, 1);
+  return busSendStream(ptrData, sizeof(data), true);
+}
+
+
+uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
+{
+  if (busSend(setLastCommand(command))) return getLastResult();
+  return busSend(data);
 }
 
 
@@ -107,19 +141,24 @@ uint8_t gbj_twowire::busRead()
 }
 
 
-uint8_t gbj_twowire::busReceive(uint8_t dataArray[], uint8_t bytes, uint8_t start)
+uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
 {
   initLastResult();
-  beginTransmission(getAddress());
-  if (requestFrom(getAddress(), bytes, (uint8_t) getBusStop()) > 0 \
-  && available() >= bytes)
+  while (dataLen)
   {
-    for (uint8_t i = 0; i < bytes; i++)
+    uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
+    beginTransmission(getAddress());
+    if (requestFrom(getAddress(), pageLen, (uint8_t) getBusStop()) > 0 \
+    && available() >= pageLen)
     {
-      dataArray[i + start] = busRead();
+      for (uint8_t i = 0; i < pageLen; i++)
+      {
+        *dataBuffer++ = busRead();
+      }
     }
+    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+    dataLen -= pageLen;
   }
-  setLastResult(endTransmission(getBusStop()));
   return getLastResult();
 }
 
@@ -128,7 +167,7 @@ uint8_t gbj_twowire::busGeneralReset()
 {
   initBus();
   beginTransmission(ADDRESS_GENCALL);
-  busWrite(GENCALL_RESET);
+  platformWrite(GENCALL_RESET);
   if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
   return getLastResult();
 }
@@ -208,32 +247,18 @@ void gbj_twowire::initBus()
 #if defined(__AVR__)
   if (!_busStatus.busEnabled)
   {
-<<<<<<< HEAD
-=======
-    setBusClock(_busStatus.clock);
->>>>>>> 0e28c8dd30660667c58659c8de86af81351de47c
     Wire.begin();
     _busStatus.busEnabled = true;
   }
 #elif defined(ESP8266) || defined(ESP32)
   if (!_busStatus.busEnabled)
   {
-<<<<<<< HEAD
     Wire.begin(_status.pinSDA, _status.pinSCL);
     _status.busEnabled = true;
-=======
-    setBusClock(_busStatus.clock);
-    Wire.begin(_busStatus.pinSDA, _busStatus.pinSCL);
-    _busStatus.busEnabled = true;
->>>>>>> 0e28c8dd30660667c58659c8de86af81351de47c
   }
 #elif defined(PARTICLE)
   if (!isEnabled())
   {
-<<<<<<< HEAD
-=======
-    setBusClock(_busStatus.clock);
->>>>>>> 0e28c8dd30660667c58659c8de86af81351de47c
     Wire.begin();
   }
 #endif
