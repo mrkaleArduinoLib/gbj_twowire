@@ -51,7 +51,7 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
   while (dataLen)
   {
     uint8_t pageLen = BUFFER_LENGTH;
-    while (millis() - _busStatus.sendTimestamp < getDelaySend());
+    waitTimestampSend();
     beginTransmission(getAddress());
     while (pageLen > 0 && dataLen > 0)
     {
@@ -61,7 +61,7 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
       dataLen--;
     }
     if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
-    _busStatus.sendTimestamp = millis();
+    setTimestampSend();
   }
   return getLastResult();
 }
@@ -85,7 +85,7 @@ uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen
   while (dataLen)
   {
     uint8_t pageLen = BUFFER_LENGTH;
-    while (millis() - _busStatus.sendTimestamp < getDelaySend());
+    waitTimestampSend();
     beginTransmission(getAddress());
     // Injected prefix stream in every page
     if (prfxExec)
@@ -110,7 +110,7 @@ uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen
       dataLen--;
     }
     if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
-    _busStatus.sendTimestamp = millis();
+    setTimestampSend();
   }
   return getLastResult();
 }
@@ -147,6 +147,7 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
   while (dataLen)
   {
     uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
+    waitTimestampReceive();
     beginTransmission(getAddress());
     if (requestFrom(getAddress(), pageLen, (uint8_t) getBusStop()) > 0 \
     && available() >= pageLen)
@@ -157,6 +158,7 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
       }
     }
     if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+    setTimestampReceive();
     dataLen -= pageLen;
   }
   return getLastResult();
@@ -169,6 +171,7 @@ uint8_t gbj_twowire::busGeneralReset()
   beginTransmission(ADDRESS_GENCALL);
   platformWrite(GENCALL_RESET);
   if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
+  setTimestampSend();
   return getLastResult();
 }
 

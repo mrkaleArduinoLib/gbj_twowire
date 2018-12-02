@@ -93,8 +93,20 @@ The library embraces and provides common methods used at every application worki
 - [isError()](#isError)
 
 #### Protected
-- [setDelaySend()](#setDelaySend)
-- [getDelaySend()](#getDelaySend)
+- [setDelaySend()](#setDelay)
+- [setDelayReceive()](#setDelay)
+- [resetDelaySend()](#setDelay)
+- [resetDelayReceive()](#setDelay)
+- [getDelaySend()](#getDelay)
+- [getDelayReceive()](#getDelay)
+- [setTimestampSend()](#setTimestamp)
+- [setTimestampReceive()](#setTimestamp)
+- [resetTimestampSend()](#setTimestamp)
+- [resetTimestampReceive()](#setTimestamp)
+- [getTimestampSend()](#getTimestamp)
+- [getTimestampReceive()](#getTimestamp)
+- [waitTimestampSend()](#waitTimestamp)
+- [waitTimestampReceive()](#waitTimestamp)
 - [wait()](#wait)
 - [initBus()](#initBus)
 
@@ -181,16 +193,16 @@ None
 <a id="initLastResult"></a>
 ## initLastResult()
 #### Description
-The method sets internal status of recent processing on the two-wire bus to success with value of macro [gbj\_twowire::SUCCESS](#constants). It is usually called right before any operation on the bus in order to reset the internal status.
+The method sets and returns internal status of recent processing on the two-wire bus to success with class constant [gbj\_twowire::SUCCESS](#constants). It is usually called right before any operation on the bus in order to reset the internal status or in methods without bus communication.
 
 #### Syntax
-    void initLastResult();
+    uint8_t initLastResult();
 
 #### Parameters
 None
 
 #### Returns
-None
+Success [result code](#constants).
 
 #### See also
 [getLastResult()](#getLastResult)
@@ -775,14 +787,17 @@ Some of [result or error codes](#constants).
 [Back to interface](#interface)
 
 
-<a id="setDelaySend"></a>
-## setDelaySend()
+<a id="setDelay"></a>
+## setDelaySend(), resetDelaySend(), setDelayReceive(), resetDelayReceive()
 #### Description
-The method sets delay for waiting before subsequent sending transaction until that time period expires from finishing previous sending transaction.
-- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after sending to the bus, which might last the desired delay, so that the method does not block the system uselessly.
+The particular method sets or erases delay for waiting before subsequent sending or receving transaction until that time period expires from finishing that previous transaction.
+- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after communication on the bus, which might last the desired delay, so that the method does not block the system uselessly.
 
 #### Syntax
     void setDelaySend(uint32_t delay);
+    void resetDelaySend();
+    void setDelayReceive(uint32_t delay);
+    void resetDelayReceive();
 
 #### Parameters
 - **delay**: Delaying time period in milliseconds.
@@ -793,29 +808,101 @@ The method sets delay for waiting before subsequent sending transaction until th
 None
 
 #### See also
-[getDelaySend()](#getDelaySend)
+[getDelaySend(), getDelayReceive()](#getDelay)
 
 [busSendStream()](#busSendStream)
+
+[busReceive()](#busReceive)
 
 [Back to interface](#interface)
 
 
-<a id="getDelaySend"></a>
-## getDelaySend()
+<a id="getDelay"></a>
+## getDelaySend(), getDelayReceive()
 #### Description
-The method returns the current sending delay stored in the class instance object.
+The particular method returns the current sending or receiving delay stored in the class instance object.
 
 #### Syntax
     uint32_t getDelaySend();
+    uint32_t getDelayReceive();
 
 #### Parameters
 None
 
 #### Returns
-Current sending delay in milliseconds.
+Particular current delay in milliseconds.
 
 #### See also
-[setDelaySend()](#setDelaySend)
+[setDelaySend(), resetDelaySend(), setDelayReceive(), resetDelayReceive()](#setDelay)
+
+[Back to interface](#interface)
+
+
+<a id="setTimestamp"></a>
+## setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()
+#### Description
+The particular method sets or erases internal timestamp of finishing every either sending or receiving communication transaction on the two-wire bus to the current running time of the microcontroller in milliseconds with the function `millis()`.
+
+#### Syntax
+    void setTimestampSend();
+    void resetTimestampSend();
+    void setTimestampReceive();
+    void resetTimestampReceive();
+
+#### Parameters
+None
+
+#### Returns
+None
+
+#### See also
+[waitTimestampSend(), waitTimestampReceive()](#waitTimestamp)
+
+[Back to interface](#interface)
+
+
+<a id="waitTimestamp"></a>
+## waitTimestampSend(), waitTimestampReceive()
+#### Description
+The particular method waits until current running time of the microcontroller reaches internal sending or receiving timestamp. The method enables sensors to settle after changing their status.
+
+#### Syntax
+    void waitTimestampSend();
+    void waitTimestampReceive();
+
+#### Parameters
+None
+
+#### Returns
+None
+
+#### See also
+[setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()](#setTimestamp)
+
+[wait()](#wait)
+
+[Back to interface](#interface)
+
+
+<a id="getTimestamp"></a>
+## getTimestampSend(), getTimestampReceive()
+#### Description
+The particular method returns recently saved internal sending or receiving timestamp.
+
+#### Syntax
+    uint32_t getTimestampSend();
+    uint32_t getTimestampReceive();
+
+#### Parameters
+None
+
+#### Returns
+Timestamp of finishing of the recent sending or receiving communication transaction on the two-wire bus.
+
+#### See also
+[setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()](#setTimestamp)
+
+[wait()](#wait)
 
 [Back to interface](#interface)
 
@@ -835,6 +922,9 @@ The method waits in the loop until input delay expires.
 
 #### Returns
 None
+
+#### See also
+[waitTimestampSend(), waitTimestampReceive()](#waitTimestamp)
 
 [Back to interface](#interface)
 

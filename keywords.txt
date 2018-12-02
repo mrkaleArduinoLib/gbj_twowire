@@ -17,6 +17,13 @@ setBusStop	KEYWORD2
 setBusClock	KEYWORD2
 setPins	KEYWORD2
 setDelaySend	KEYWORD2
+resetDelaySend	KEYWORD2
+setTimestampSend	KEYWORD2
+resetTimestampSend	KEYWORD2
+setDelayReceive	KEYWORD2
+resetDelayReceive	KEYWORD2
+setTimestampReceive	KEYWORD2
+resetTimestampReceive	KEYWORD2
 setLastCommand	KEYWORD2
 initLastResult	KEYWORD2
 getBusClock	KEYWORD2
@@ -32,6 +39,9 @@ getPinSCL	KEYWORD2
 getLastCommand	KEYWORD2
 getLastResult	KEYWORD2
 getDelaySend	KEYWORD2
+getTimestampSend	KEYWORD2
+getDelayReceive	KEYWORD2
+getTimestampReceive	KEYWORD2
 isSuccess	KEYWORD2
 isError	KEYWORD2
 busSendStream	KEYWORD2
@@ -41,6 +51,8 @@ busRead	KEYWORD2
 busReceive	KEYWORD2
 busGeneralReset	KEYWORD2
 wait	KEYWORD2
+waitTimestampSend	KEYWORD2
+waitTimestampReceive	KEYWORD2
 initBus	KEYWORD2
 
 #######################################

@@ -356,7 +356,7 @@ uint8_t busGeneralReset();
 //------------------------------------------------------------------------------
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
-inline void initLastResult() { _busStatus.lastResult = SUCCESS; };
+inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
 inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _busStatus.lastResult = lastResult; };
 inline void setBusStop(bool busStop) { _busStatus.busStop = busStop; };
 uint8_t setAddress(uint8_t address);
@@ -434,6 +434,8 @@ struct
   uint8_t pinSCL;  // Pin for serial clock
   uint32_t sendDelay = 0;  // Waiting after each sent page to bus in milliseconds
   uint32_t sendTimestamp = 0;  // Timestamp of recent bus send in milliseconds
+  uint32_t receiveDelay = 0;  // Waiting after each received page to bus in milliseconds
+  uint32_t receiveTimestamp = 0;  // Timestamp of recent bus receive in milliseconds
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
   bool busEnabled;  // Flag about bus initialization
 #endif
@@ -452,7 +454,7 @@ protected:
 // Protected methods
 //------------------------------------------------------------------------------
 /*
-  Set delay for waiting after each send transaction to settle a device.
+  Set delay for waiting after each sending transaction to settle a device.
 
   DESCRIPTION:
   If a delay value is set, than the library waits before subsequent sending
@@ -468,7 +470,35 @@ protected:
   RETURN: none
 */
 inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; };
+inline void resetDelaySend() { _busStatus.sendDelay = 0; };
 inline uint32_t getDelaySend() { return _busStatus.sendDelay; };
+inline void setTimestampSend() { _busStatus.sendTimestamp = millis(); };
+inline void resetTimestampSend() { _busStatus.sendTimestamp = 0; };
+inline void waitTimestampSend() { while (millis() - _busStatus.sendTimestamp < getDelaySend()); };
+inline uint32_t getTimestampSend() { return _busStatus.sendTimestamp; };
+/*
+  Set delay for waiting after each receiving transaction to settle a device.
+
+  DESCRIPTION:
+  If a delay value is set, than the library waits before subsequent receiving
+  transaction until that time period expires from finishing previous receiving
+  transaction.
+
+  PARAMETERS:
+  delay - Delaying time period in milliseconds.
+          - Data type: non-negative integer
+          - Default value: none
+          - Limited range: 0 ~ 2^32 - 1
+
+  RETURN: none
+*/
+inline void setDelayReceive(uint32_t delay) { _busStatus.receiveDelay = delay; };
+inline void resetDelayReceive() { _busStatus.receiveDelay = 0; };
+inline uint32_t getDelayReceive() { return _busStatus.receiveDelay; };
+inline void setTimestampReceive() { _busStatus.receiveTimestamp = millis(); };
+inline void resetTimestampReceive() { _busStatus.receiveTimestamp = 0; };
+inline void waitTimestampReceive() { while (millis() - _busStatus.receiveTimestamp < getDelayReceive()); };
+inline uint32_t getTimestampReceive() { return _busStatus.receiveTimestamp; };
 
 
 /*
