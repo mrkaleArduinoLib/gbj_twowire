@@ -5,7 +5,7 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 // Constructor
 gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL)
 {
-  setBusClock(clockSpeed);
+  _busStatus.clock = clockSpeed;  // Sanitized and set in initBus
   setBusStop(busStop);
   setPins(pinSDA, pinSCL);
 }
@@ -265,6 +265,7 @@ void gbj_twowire::initBus()
     Wire.begin();
   }
 #endif
+setBusClock(getBusClock());
 }
 
 
