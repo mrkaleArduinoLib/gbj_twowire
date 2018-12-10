@@ -353,8 +353,8 @@ uint8_t busGeneralReset();
 //------------------------------------------------------------------------------
 inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
 inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _busStatus.lastResult = lastResult; };
-inline void setBusStop() { _busStatus.busStop = true; };
-inline void setBusRpte() { _busStatus.busStop = false; };  // Start repeate
+inline void setBusStop() { setBusStopFlag(true); };
+inline void setBusRpte() { setBusStopFlag(false); };  // Start repeated
 uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 
@@ -443,6 +443,7 @@ struct
 // Private methods
 //------------------------------------------------------------------------------
 inline uint8_t setLastCommand(uint8_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
+inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; };
 uint8_t platformWrite(uint8_t data);
 
 
