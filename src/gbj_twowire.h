@@ -94,11 +94,6 @@ enum ClockSpeed
                - Default value: CLOCK_100KHZ
                - Limited range: CLOCK_100KHZ, CLOCK_400KHZ
 
-  busStop - Flag about releasing the bus after end of data transmission.
-            - Data type: boolean
-            - Default value: true
-            - Limited range: true, false
-
   pinSDA - Microcontroller's pin for serial data.
           - Data type: non-negative integer
           - Default value: 4 (GPIO4, D2)
@@ -111,8 +106,7 @@ enum ClockSpeed
 
   RETURN:  object
 */
-gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, bool busStop = true, \
-  uint8_t pinSDA = 4, uint8_t pinSCL = 5);
+gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, uint8_t pinSDA = 4, uint8_t pinSCL = 5);
 
 
 /*
@@ -359,7 +353,8 @@ uint8_t busGeneralReset();
 //------------------------------------------------------------------------------
 inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
 inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _busStatus.lastResult = lastResult; };
-inline void setBusStop(bool busStop) { _busStatus.busStop = busStop; };
+inline void setBusStop() { _busStatus.busStop = true; };
+inline void setBusRpte() { _busStatus.busStop = false; };  // Start repeate
 uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 
@@ -398,7 +393,8 @@ inline uint8_t getPinSCL() { return _busStatus.pinSCL; };
 inline uint32_t getBusClock() { return _busStatus.clock; };  // Bus clock frequency in Hz
 inline bool isSuccess() { return _busStatus.lastResult == SUCCESS; } // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
-inline bool getBusStop() { return _busStatus.busStop; };  // Flag about current bus releasing
+inline bool getBusStop() { return _busStatus.busStop; };
+inline bool getBusRpte() { return !_busStatus.busStop; };
 
 
 private:

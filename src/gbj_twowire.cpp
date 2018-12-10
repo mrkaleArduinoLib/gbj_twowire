@@ -3,10 +3,10 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 
 
 // Constructor
-gbj_twowire::gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL)
+gbj_twowire::gbj_twowire(uint32_t clockSpeed, uint8_t pinSDA, uint8_t pinSCL)
 {
   _busStatus.clock = clockSpeed;  // Sanitized and set in initBus
-  setBusStop(busStop);
+  setBusStop();
   setPins(pinSDA, pinSCL);
 }
 

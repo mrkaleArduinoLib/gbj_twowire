@@ -14,6 +14,7 @@ begin	KEYWORD2
 release	KEYWORD2
 setAddress	KEYWORD2
 setBusStop	KEYWORD2
+setBusRpte	KEYWORD2
 setBusClock	KEYWORD2
 setPins	KEYWORD2
 setDelaySend	KEYWORD2
@@ -28,6 +29,7 @@ setLastCommand	KEYWORD2
 initLastResult	KEYWORD2
 getBusClock	KEYWORD2
 getBusStop	KEYWORD2
+getBusRpte	KEYWORD2
 getAddress	KEYWORD2
 getAddressMin	KEYWORD2
 getAddressMinSpecial	KEYWORD2

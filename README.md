@@ -6,8 +6,8 @@ The library embraces and provides common methods used at every application worki
 - Library respects two-wire buffer length (32 byte) at communication on the bus by paging, so that it splits long byte streams into separate transactions.
 - Library implements extended error handling.
 - Library provides some general system methods implemented differently for various platforms, especially for ones with hardware two-wire bus implementation (Arduino, Particle - Photon, Electron...) and for ones with software (bit-banged) defined two-wire bus (Espressif - ESP8266, ESP32).
-- Library initiates the two-wire bus at default speed (serial clock) **100 kHz**, but bus speed can be change dynamically.
-- It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in this library in the method `begin`, which is not defined in the library.
+- Library initiates the two-wire bus at default speed (serial clock) **100 kHz** and with generating stop condition after every end of transmission or data request, but they can be changed dynamically.
+- It is expected, that initialization of a device and setting its parameters is provided in a subclass inherited from the class defined in that library in the method `begin`.
 - Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
 - Library allows address range 0x00 ~ 0x7F.
 - Library utilizes the general call on the two-wire bus as well.
@@ -73,6 +73,7 @@ The library embraces and provides common methods used at every application worki
 - [setLastResult()](#setLastResult)
 - [setAddress()](#setAddress)
 - [setBusStop()](#setBusStop)
+- [setBusRpte()](#setBusStop)
 - [setBusClock()](#setBusClock)
 - [setPins()](#setPins)
 - [initLastResult()](#initLastResult)
@@ -87,6 +88,7 @@ The library embraces and provides common methods used at every application worki
 - [getAddressMax()](#getAddressLimits)
 - [getAddressMaxUsual()](#getAddressLimits)
 - [getBusStop()](#getBusStop)
+- [getBusRpte()](#getBusStop)
 - [getBusClock()](#getBusClock)
 - [getPinSDA()](#getPins)
 - [getPinSCL()](#getPins)
@@ -120,21 +122,13 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
 - If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
-    gbj_twowire(uint32_t clockSpeed, bool busStop, uint8_t pinSDA, uint8_t pinSCL);
+    gbj_twowire(uint32_t clockSpeed, uint8_t pinSDA, uint8_t pinSCL);
 
 #### Parameters
 <a id="prm_busClock"></a>
 - **clockSpeed**: Initial two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
   - *Valid values*: gbj\_twowire::CLOCK\_100KHZ, gbj\_twowire::CLOCK\_400KHZ
   - *Default value*: gbj\_twowire::CLOCK\_100KHZ
-
-
-<a id="prm_busStop"></a>
-- **busStop**: Logical flag about releasing bus after end of transmission.
-  - *Valid values*: true, false
-    - **true**: Releases the bus after data transmission and enables other master devices to control the bus.
-    - **false**: Keeps connection to the bus and enables to begin further data transmission immediately.
-  - *Default value*: true
 
 
 <a id="prm_pinSDA"></a>
@@ -158,7 +152,7 @@ The constructor cannot return [a result or error code](#constants) directly, how
 <a id="begin"></a>
 ## begin()
 #### Description
-The method checks the microcontroller's pins defined in the [constructor](gbj_twowire) for software defined two-wire bus platforms.
+The method checks the microcontroller's pins defined in the [constructor](gbj_twowire) for software defined two-wire bus platforms and initiates the two-wire bus. So that, it should be called at the beginning of every corresponding method of an inherited class.
 - The method checks whether pins set by constructor are not mutually equal.
 - For hardware two-wire bus platforms the method ignores defined or default pins.
 
@@ -170,6 +164,16 @@ None
 
 #### Returns
 Some of [result or error codes](#constants).
+
+#### Example
+Calling methods in an application subclass.
+```cpp
+uint8_t gbj_acme::begin()
+{
+  if (gbj_twowire::begin()) return getLastResult();
+  ...
+}
+```
 
 [Back to interface](#interface)
 
@@ -292,28 +296,19 @@ if (Object.setAddress(newAddress) == gbj_twowire::SUCCESS)
 
 
 <a id="setBusStop"></a>
-## setBusStop()
+## setBusStop(), setBusRpte()
 #### Description
-The method sets the stop flag determining releasing the two-wire bus after each end of data transmission.
+The particular method sets the flag whether stop or repeated start condition should be generated after each end of data transmission or data request.
 
 #### Syntax
-    void setBusStop(bool busStop);
-
-#### Parameters
-<a id="prm_busStop"></a>
-- **busStop**: Logical flag about releasing bus after end of transmission.
-  - *Valid values*: true, false
-    - **true**: Releases the bus after data transmission and enables other master devices to control the bus.
-    - **false**: Keeps connection to the bus and enables to begin further data transmission immediately.
-  - *Default value*: none
+    void setBusStop();
+    void setBusRpte();
 
 #### Returns
 None
 
 #### See also
-[constructor](#gbj_twowire)
-
-[getBusStop()](#getBusStop)
+[getBusStop(), getBusRpte()](#getBusStop)
 
 [Back to interface](#interface)
 
@@ -443,23 +438,22 @@ Corresponding address limit.
 
 
 <a id="getBusStop"></a>
-## getBusStop()
+## getBusStop(), getBusRpte()
 #### Description
-The method returns the current stopping flag stored in the class instance object.
+The particular method returns a flag about currently generating stop or repeated start condition.
 
 #### Syntax
     bool getBusStop();
+    bool getBusRpte();
 
 #### Parameters
 None
 
 #### Returns
-Current stopping flag.
+Current stopping or repeated start flag.
 
 #### See also
-[constructor](#gbj_twowire)
-
-[setBusStop()](#setBusStop)
+[setBusStop(), setBusRpte()](#setBusStop)
 
 [Back to interface](#interface)
 
