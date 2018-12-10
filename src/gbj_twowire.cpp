@@ -144,10 +144,10 @@ uint8_t gbj_twowire::busRead()
 uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
 {
   initLastResult();
+  waitTimestampReceive();
   while (dataLen)
   {
     uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
-    waitTimestampReceive();
     beginTransmission(getAddress());
     if (requestFrom(getAddress(), pageLen, (uint8_t) getBusStop()) > 0 \
     && available() >= pageLen)
@@ -157,10 +157,10 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
         *dataBuffer++ = busRead();
       }
     }
-    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
-    setTimestampReceive();
+    else return setLastResult(ERROR_RCV_DATA);
     dataLen -= pageLen;
   }
+  setTimestampReceive();
   return getLastResult();
 }
 

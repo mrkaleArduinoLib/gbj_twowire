@@ -67,6 +67,7 @@ enum ResultCodes
   ERROR_ADDRESS = ERROR_START,
   #endif
   ERROR_PINS = 10, // Error defining pins, usually both are the same
+  ERROR_RCV_DATA = 11, // Less data received than expected
 };
 enum ClockSpeed
 {

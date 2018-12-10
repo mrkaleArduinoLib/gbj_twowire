@@ -53,6 +53,7 @@ The library embraces and provides common methods used at every application worki
 ### Common errors
 - **gbj\_twowire::ERROR\_ADDRESS**: Platform specific error code at bad address.
 - **gbj\_twowire::ERROR\_PINS**: For software defined two-wire bus platforms at bad defined bus pins (GPIOs), usually both are the same.
+- **gbj\_twowire::ERROR\_RCV\_DATA**: Received data is zero or shorter than expected.
 
 
 <a id="interface"></a>
