@@ -3,7 +3,7 @@
 The library embraces and provides common methods used at every application working with sensor on two-wire (I2C) bus.
 - Library specifies (inherits from) the system `TwoWire` library.
 - The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
-- Library respects two-wire buffer length (32 byte) at communication on the bus by paging, so that it splits long byte streams into separate transactions.
+- Library respects two-wire buffer length (32 byte) at communication on the bus by paging, so that it splits long byte streams into separate transmissions.
 - Library implements extended error handling.
 - Library provides some general system methods implemented differently for various platforms, especially for ones with hardware two-wire bus implementation (Arduino, Particle - Photon, Electron...) and for ones with software (bit-banged) defined two-wire bus (Espressif - ESP8266, ESP32).
 - Library initiates the two-wire bus at default speed (serial clock) **100 kHz** and with generating stop condition after every end of transmission or data request, but they can be changed dynamically.
@@ -560,7 +560,7 @@ else
 The method returns the command code used at recent communication on two-wire bus. In conjunction with returned result or error code of particular method it is possible to detect the source or reason of a communication error.
 
 #### Syntax
-	uint8_t getLastCommand();
+	uint16_t getLastCommand();
 
 #### Parameters
 None
@@ -576,7 +576,7 @@ Recently used command code.
 #### Description
 The method sends input data byte stream to the two-wire bus chunked by parent library two-wire data buffer length (paging).
 - If there is a send delay defined, the method waits for that time period expiration before sending next chunk (page).
-- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after sending to the bus, which might last the desired delay, so that the method does not block the system uselessly.
+- In order not to block system, the method does not wait after a transmission, but before transmissions for delay expiring. It gives the system a chance to perform some tasks after sending to the bus, which might last the desired delay, so that the method does not block the system uselessly.
 
 #### Syntax
     uint8_t busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse);
@@ -673,10 +673,10 @@ Some of [result or error codes](#constants).
 <a id="busSend"></a>
 ## busSend()
 #### Description
-The method sends input data to the two-wire bus as one communication transaction.
+The method sends input data to the two-wire bus as one communication transmission.
 - The method is overloaded.
-- In case of two parameters, the first one is considered as a command and second one as the data. In this case the method sends 2 ~ 4 bytes to the bus in one transaction.
-- In case of one parameter, it is considered as the general data and in fact might be a command or the data. In this case the method sends 1 ~ 2 bytes to the bus in one transaction.
+- In case of two parameters, the first one is considered as a command and second one as the data. In this case the method sends 2 ~ 4 bytes to the bus in one transmission.
+- In case of one parameter, it is considered as the general data and in fact might be a command or the data. In this case the method sends 1 ~ 2 bytes to the bus in one transmission.
 
 #### Syntax
     uint8_t busSend(uint16_t command, uint16_t data);
@@ -725,11 +725,20 @@ Data byte read from the bus.
 ## busReceive()
 #### Description
 The method reads a byte stream from the two-wire bus chunked by parent library two-wire data buffer length (paging) and places them to the buffer defined by an input pointer.
+- The method is overloaded.
+- In case of 3 parameters, the first one is considered as a command, which is sent to the bus before reading from it.
+- In case of 2 parameter, the method just reads to the buffer from the bus.
 
 #### Syntax
+    uint8_t busReceive(uint16_t command, uint8_t *dataBuffer, uint16_t dataLen);
     uint8_t busReceive(uint8_t *dataBuffer, uint16_t dataLen);
 
 #### Parameters
+- **command**: Word or byte to be sent to the two-wire bus in the role of command.
+  - *Valid values*: non-negative integer 0 ~ 65535
+  - *Default value*: none
+
+
 - **dataBuffer**: Pointer to a byte buffer for storing read data. The buffer should be enough large for storing all read bytes.
   - *Valid values*: address space
   - *Default value*: none
@@ -785,8 +794,8 @@ Some of [result or error codes](#constants).
 <a id="setDelay"></a>
 ## setDelaySend(), resetDelaySend(), setDelayReceive(), resetDelayReceive()
 #### Description
-The particular method sets or erases delay for waiting before subsequent sending or receving transaction until that time period expires from finishing that previous transaction.
-- In order not to block system, the method does not wait after a transaction, but before transactions for delay expiring. It gives the system a chance to perform some tasks after communication on the bus, which might last the desired delay, so that the method does not block the system uselessly.
+The particular method sets or erases delay for waiting before subsequent sending or receving transmission until that time period expires from finishing that previous transmission.
+- In order not to block system, the method does not wait after a transmission, but before transmissions for delay expiring. It gives the system a chance to perform some tasks after communication on the bus, which might last the desired delay, so that the method does not block the system uselessly.
 
 #### Syntax
     void setDelaySend(uint32_t delay);
@@ -836,7 +845,7 @@ Particular current delay in milliseconds.
 <a id="setTimestamp"></a>
 ## setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()
 #### Description
-The particular method sets or erases internal timestamp of finishing every either sending or receiving communication transaction on the two-wire bus to the current running time of the microcontroller in milliseconds with the function `millis()`.
+The particular method sets or erases internal timestamp of finishing every either sending or receiving communication transmission on the two-wire bus to the current running time of the microcontroller in milliseconds with the function `millis()`.
 
 #### Syntax
     void setTimestampSend();
@@ -892,7 +901,7 @@ The particular method returns recently saved internal sending or receiving times
 None
 
 #### Returns
-Timestamp of finishing of the recent sending or receiving communication transaction on the two-wire bus.
+Timestamp of finishing of the recent sending or receiving communication transmission on the two-wire bus.
 
 #### See also
 [setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()](#setTimestamp)

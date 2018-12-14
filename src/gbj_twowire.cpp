@@ -6,8 +6,10 @@ const String gbj_twowire::VERSION = "GBJ_TWOWIRE 1.0.0";
 gbj_twowire::gbj_twowire(uint32_t clockSpeed, uint8_t pinSDA, uint8_t pinSCL)
 {
   _busStatus.clock = clockSpeed;  // Sanitized and set in initBus
-  setBusStop();
   setPins(pinSDA, pinSCL);
+  setBusStop();
+  setStreamDirDflt();
+  setStreamBytesDflt();
 }
 
 
@@ -42,7 +44,7 @@ void gbj_twowire::release()
 
 uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse)
 {
-  bool flagBusStop = getBusStop();
+  bool origBusStop = getBusStop();
   initLastResult();
   setBusRpte();
   if (dataReverse)
@@ -63,14 +65,11 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
       dataLen--;
     }
     // Return original flag at last page
-    if (dataLen == 0) setBusStopFlag(flagBusStop);
-    if (setLastResult(endTransmission(getBusStop())))
-    {
-      setBusStopFlag(flagBusStop);
-      return getLastResult();
-    }
+    if (dataLen == 0) setBusStopFlag(origBusStop);
+    return setLastResult(endTransmission(getBusStop()));
   }
   setTimestampSend();
+  setBusStopFlag(origBusStop);
   return getLastResult();
 }
 
@@ -78,7 +77,7 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
 uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse, \
   uint8_t *prfxBuffer, uint16_t prfxLen, bool prfxReverse, bool prfxOnetime)
 {
-  bool flagBusStop = getBusStop();
+  bool origBusStop = getBusStop();
   bool prfxExec = true;
   initLastResult();
   setBusRpte();
@@ -120,30 +119,33 @@ uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen
       dataLen--;
     }
     // Return original flag at last page
-    if (dataLen == 0) setBusStopFlag(flagBusStop);
-    if (setLastResult(endTransmission(getBusStop())))
-    {
-      setBusStopFlag(flagBusStop);
-      return getLastResult();
-    }
+    if (dataLen == 0) setBusStopFlag(origBusStop);
+    return setLastResult(endTransmission(getBusStop()));
   }
   setTimestampSend();
+  setBusStopFlag(origBusStop);
   return getLastResult();
 }
 
 
 uint8_t gbj_twowire::busSend(uint16_t data)
 {
-  uint8_t *ptrData = (uint8_t*)&data;
-  if (data < 0x100) return busSendStream(ptrData, 1);
-  return busSendStream(ptrData, sizeof(data), true);
+  uint8_t dataBuffer[2];
+  uint16_t dataLen = 0;
+  bufferData(dataBuffer, dataLen, data);
+  if (busSendStream(dataBuffer, dataLen)) return getLastResult();
+  return getLastResult();
 }
 
 
 uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
 {
-  if (busSend(setLastCommand(command))) return getLastResult();
-  return busSend(data);
+  uint8_t dataBuffer[4];
+  uint16_t dataLen = 0;
+  bufferData(dataBuffer, dataLen, setLastCommand(command));
+  bufferData(dataBuffer, dataLen, data);
+  if (busSendStream(dataBuffer, dataLen)) return getLastResult();
+  return getLastResult();
 }
 
 
@@ -159,7 +161,7 @@ uint8_t gbj_twowire::busRead()
 
 uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
 {
-  bool flagBusStop = getBusStop();
+  bool origBusStop = getBusStop();
   initLastResult();
   setBusRpte();
   waitTimestampReceive();
@@ -167,7 +169,7 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
   {
     uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
     // Return original flag before last page
-    if (pageLen >= dataLen) setBusStopFlag(flagBusStop);
+    if (pageLen >= dataLen) setBusStopFlag(origBusStop);
     beginTransmission(getAddress());
     if (requestFrom(getAddress(), pageLen, (uint8_t) getBusStop()) > 0 \
     && available() >= pageLen)
@@ -179,12 +181,23 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
     }
     else
     {
-      setBusStopFlag(flagBusStop);
       return setLastResult(ERROR_RCV_DATA);
     }
     dataLen -= pageLen;
   }
   setTimestampReceive();
+  setBusStopFlag(origBusStop);
+  return getLastResult();
+}
+
+
+uint8_t gbj_twowire::busReceive(uint16_t command, uint8_t *dataBuffer, uint16_t dataLen)
+{
+  bool origBusStop = getBusStop();
+  setBusRpte();
+  if (busSend(setLastCommand(command))) return getLastResult();
+  setBusStopFlag(origBusStop);
+  if (busReceive(dataBuffer, dataLen)) return getLastResult();
   return getLastResult();
 }
 
@@ -219,8 +232,7 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
   if (!getBusStop()) end();
 #endif
   beginTransmission(getAddress());
-  setLastResult(endTransmission(getBusStop()));
-  return getLastResult();
+  return setLastResult(endTransmission(getBusStop()));
 }
 
 
@@ -254,6 +266,23 @@ uint8_t gbj_twowire::setPins(uint8_t pinSDA, uint8_t pinSCL)
   if (_busStatus.pinSDA == _busStatus.pinSCL) return setLastResult(ERROR_PINS);
 #endif
   return getLastResult();
+}
+
+
+uint8_t gbj_twowire::setLastResult(uint8_t lastResult)
+{
+  if (lastResult != SUCCESS) setBusStop();
+  return _busStatus.lastResult = lastResult;
+}
+
+
+//------------------------------------------------------------------------------
+// Getters
+//------------------------------------------------------------------------------
+uint8_t gbj_twowire::getLastResult()
+{
+  if (_busStatus.lastResult != SUCCESS) setBusStop();
+  return _busStatus.lastResult;
 }
 
 
@@ -293,9 +322,6 @@ setBusClock(getBusClock());
 }
 
 
-//------------------------------------------------------------------------------
-// Private methods
-//------------------------------------------------------------------------------
 uint8_t gbj_twowire::platformWrite(uint8_t data)
 {
   #if ARDUINO >= 100
@@ -303,4 +329,22 @@ uint8_t gbj_twowire::platformWrite(uint8_t data)
   #else
     return send(data);
   #endif
+}
+
+void gbj_twowire::bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t data)
+{
+  uint8_t dataLSB = data & 0xFF;
+  uint8_t dataMSB = (data >> 8) & 0xFF;
+  switch (getStreamDir())
+  {
+    case STREAM_DIR_MSB:
+    if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB) dataBuffer[dataIdx++] = dataMSB;
+    dataBuffer[dataIdx++] = dataLSB;
+    break;
+    case STREAM_DIR_LSB:
+    default:
+      if ((getStreamBytes() == STREAM_BYTES_ALL) || dataLSB) dataBuffer[dataIdx++] = dataLSB;
+      dataBuffer[dataIdx++] = dataMSB;
+      break;
+  }
 }

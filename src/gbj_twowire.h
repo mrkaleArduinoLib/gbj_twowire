@@ -18,7 +18,7 @@
   CREDENTIALS:
   Author: Libor Gabaj
   GitHub: https://github.com/mrkaleArduinoLib/gbj_twowire.git
- */
+*/
 #ifndef GBJ_TWOWIRE_H
 #define GBJ_TWOWIRE_H
 
@@ -259,14 +259,14 @@ uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataRe
 
   DESCRIPTION:
   The method sends input data to the two-wire bus as one communication
-  transaction.
+  transmission.
   - The method is overloaded.
   - In case of two parameters, the first one is considered as a command and
     second one as the data. In this case the method sends 2 ~ 4 bytes to the bus
-    in one transaction.
+    in one transmission.
   - In case of one parameter, it is considered as the general data and in fact
     might be a command or the data. In this case the method sends 1 ~ 2 bytes
-    to the bus in one transaction.
+    to the bus in one transmission.
   - If the most significant byte (MSB - the first one from the left) of either
     parameter is non-zero, the data is written as two subsequent bytes with MSB
     first.
@@ -287,8 +287,8 @@ uint8_t busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen, bool dataRe
   RETURN:
   Result code.
 */
-uint8_t busSend(uint16_t command, uint16_t data);
 uint8_t busSend(uint16_t data);
+uint8_t busSend(uint16_t command, uint16_t data);
 
 
 /*
@@ -313,8 +313,18 @@ uint8_t busRead();
   The method reads a byte stream from the two-wire bus chunked by parent
   library two-wire data buffer length (paging) and places them to the
   buffer defined by an input pointer.
+  - The method is overloaded.
+  - If the first simple command parameter is present, the method combines
+    sending this command to a device at first with subsequent reading from it.
 
   PARAMETERS:
+  command - Word or byte to be sent in the role of command. If present, this
+            command is sent to the two-wire bus with repeated start condition
+            right before reading from the bus with stop condition.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 65535
+
   dataBuffer - Pointer to a byte buffer for storing read data. The buffer
                should be enough large for storing all read bytes.
                - Data type: non-negative integer
@@ -330,6 +340,7 @@ uint8_t busRead();
   Result code.
 */
 uint8_t busReceive(uint8_t *dataBuffer, uint16_t dataLen);
+uint8_t busReceive(uint16_t command, uint8_t *dataBuffer, uint16_t dataLen);
 
 
 /*
@@ -352,11 +363,11 @@ uint8_t busGeneralReset();
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
 inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
-inline uint8_t setLastResult(uint8_t lastResult = SUCCESS) { return _busStatus.lastResult = lastResult; };
 inline void setBusStop() { setBusStopFlag(true); };
 inline void setBusRpte() { setBusStopFlag(false); };  // Start repeated
 uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
+uint8_t setLastResult(uint8_t lastResult = SUCCESS);
 
 /*
   Set frequency of the two-wire bus.
@@ -380,9 +391,8 @@ void setBusClock(uint32_t clockSpeed);
 //------------------------------------------------------------------------------
 // Public getters
 //------------------------------------------------------------------------------
-inline uint8_t getLastResult() { return _busStatus.lastResult; }; // Result of a recent operation
-inline uint8_t getLastCommand() { return _busStatus.lastCommand; }; // Command code of a recent operation
-inline uint8_t getAddress() { return _busStatus.address; };  // Current device address
+uint8_t getLastResult();
+inline uint8_t getAddress() { return _busStatus.address; };
 inline uint8_t getAddressMin() { return ADDRESS_MIN; };  // Adress limits...
 inline uint8_t getAddressMax() { return ADDRESS_MAX; };
 inline uint8_t getAddressMinSpecial() { return ADDRESS_MIN_SPECIAL; };
@@ -390,9 +400,10 @@ inline uint8_t getAddressMinUsual() { return ADDRESS_MIN_USUAL; };
 inline uint8_t getAddressMaxUsual() { return ADDRESS_MAX_USUAL; };
 inline uint8_t getPinSDA() { return _busStatus.pinSDA; };
 inline uint8_t getPinSCL() { return _busStatus.pinSCL; };
+inline uint16_t getLastCommand() { return _busStatus.lastCommand; };
 inline uint32_t getBusClock() { return _busStatus.clock; };  // Bus clock frequency in Hz
-inline bool isSuccess() { return _busStatus.lastResult == SUCCESS; } // Flag about successful recent operation
-inline bool isError() { return !isSuccess(); } // Flag about erroneous recent operation
+inline bool isSuccess() { return _busStatus.lastResult == SUCCESS; };  // Flag about successful recent operation
+inline bool isError() { return !isSuccess(); };  // Flag about erroneous recent operation
 inline bool getBusStop() { return _busStatus.busStop; };
 inline bool getBusRpte() { return !_busStatus.busStop; };
 
@@ -415,6 +426,13 @@ enum GeneralCall
   GENCALL_RESET = 0x06,  // Software reset and write programmable part of slave address
   GENCALL_WRITE = 0x04,  // Write programmable part of slave address only
 };
+enum DataStreamProcessing
+{
+  STREAM_DIR_LSB = 0,  // Process data stream with the least significant byte first
+  STREAM_DIR_MSB = 1,  // Process data stream with the most significant byte first
+  STREAM_BYTES_VAL = 2,  // Process only non-zero bytes from LSB - ignore zero MSB bytes
+  STREAM_BYTES_ALL = 3,  // Process all bytes of data stream regardless of their value
+};
 
 
 //------------------------------------------------------------------------------
@@ -423,12 +441,14 @@ enum GeneralCall
 struct
 {
   uint8_t lastResult; // Result of a recent operation
-  uint8_t lastCommand;  // Command code recently sent to two-wire bus
+  uint16_t lastCommand;  // Command code recently sent to two-wire bus
   uint8_t address = 255;  // Address of the device on two-wire bus
   uint32_t clock;  // Clock frequency in Hz
   bool busStop;  // Flag about releasing bus after end of transmission
   uint8_t pinSDA;  // Pin for serial data
   uint8_t pinSCL;  // Pin for serial clock
+  uint8_t streamDirection;  // Mode of data stream processing
+  uint8_t streamBytes;  // Mode of data stream bytes processing
   uint32_t sendDelay = 0;  // Waiting after each sent page to bus in milliseconds
   uint32_t sendTimestamp = 0;  // Timestamp of recent bus send in milliseconds
   uint32_t receiveDelay = 0;  // Waiting after each received page to bus in milliseconds
@@ -442,7 +462,7 @@ struct
 //------------------------------------------------------------------------------
 // Private methods
 //------------------------------------------------------------------------------
-inline uint8_t setLastCommand(uint8_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
+inline uint16_t setLastCommand(uint16_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
 inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; };
 uint8_t platformWrite(uint8_t data);
 
@@ -451,13 +471,21 @@ protected:
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
+inline uint8_t getStreamDir() { return _busStatus.streamDirection; };
+inline void setStreamDirLSB() { _busStatus.streamDirection = STREAM_DIR_LSB; };
+inline void setStreamDirMSB() { _busStatus.streamDirection = STREAM_DIR_MSB; };
+inline void setStreamDirDflt() { setStreamDirMSB(); };
+inline uint8_t getStreamBytes() { return _busStatus.streamBytes; };
+inline void setStreamBytesVal() { _busStatus.streamBytes = STREAM_BYTES_VAL; };
+inline void setStreamBytesAll() { _busStatus.streamBytes = STREAM_BYTES_ALL; };
+inline void setStreamBytesDflt() { setStreamBytesVal(); };
 /*
-  Set delay for waiting after each sending transaction to settle a device.
+  Set delay for waiting after each sending transmission to settle a device.
 
   DESCRIPTION:
   If a delay value is set, than the library waits before subsequent sending
-  transaction until that time period expires from finishing previous sending
-  transaction.
+  transmission until that time period expires from finishing previous sending
+  transmission.
 
   PARAMETERS:
   delay - Delaying time period in milliseconds.
@@ -475,12 +503,12 @@ inline void resetTimestampSend() { _busStatus.sendTimestamp = 0; };
 inline void waitTimestampSend() { while (millis() - _busStatus.sendTimestamp < getDelaySend()); };
 inline uint32_t getTimestampSend() { return _busStatus.sendTimestamp; };
 /*
-  Set delay for waiting after each receiving transaction to settle a device.
+  Set delay for waiting after each receiving transmission to settle a device.
 
   DESCRIPTION:
   If a delay value is set, than the library waits before subsequent receiving
-  transaction until that time period expires from finishing previous receiving
-  transaction.
+  transmission until that time period expires from finishing previous receiving
+  transmission.
 
   PARAMETERS:
   delay - Delaying time period in milliseconds.
@@ -528,6 +556,35 @@ void wait(uint32_t delay);
   RETURN: none
 */
 void initBus();
+
+
+/*
+  Buffer data word.
+
+  DESCRIPTION:
+  The method updates provided buffer from provided index with provided data
+  according to current streaming modes (STREAM_DIR_LSB ... STREAM_BYTES_VAL)
+  and updates that index.
+
+  PARAMETERS:
+  dataBuffer - Pointer to the byte data buffer, which should be updated.
+               - Data type: non-negative integer
+               - Default value: none
+               - Limited range: address space
+
+  dataIdx - Index to the buffer where update should start.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 65535
+
+  data - Data word, which should be analyzed and written to the buffer.
+         - Data type: non-negative integer
+         - Default value: none
+         - Limited range: 0 ~ 65535
+
+  RETURN: None
+*/
+void bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t data);
 
 };
 
