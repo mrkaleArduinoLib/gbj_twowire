@@ -66,7 +66,7 @@ uint8_t gbj_twowire::busSendStream(uint8_t *dataBuffer, uint16_t dataLen, bool d
     }
     // Return original flag at last page
     if (dataLen == 0) setBusStopFlag(origBusStop);
-    return setLastResult(endTransmission(getBusStop()));
+    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
   }
   setTimestampSend();
   setBusStopFlag(origBusStop);
@@ -120,7 +120,7 @@ uint8_t gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer, uint16_t dataLen
     }
     // Return original flag at last page
     if (dataLen == 0) setBusStopFlag(origBusStop);
-    return setLastResult(endTransmission(getBusStop()));
+    if (setLastResult(endTransmission(getBusStop()))) return getLastResult();
   }
   setTimestampSend();
   setBusStopFlag(origBusStop);
