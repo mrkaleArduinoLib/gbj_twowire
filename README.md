@@ -450,7 +450,6 @@ The method returns a flag about currently generating stop or repeated start cond
 
 #### Syntax
     bool getBusStop();
-    bool getBusRpte();
 
 #### Parameters
 None
