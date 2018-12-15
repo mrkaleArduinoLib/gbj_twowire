@@ -72,8 +72,6 @@ The library embraces and provides common methods used at every application worki
 #### Setters
 - [setLastResult()](#setLastResult)
 - [setAddress()](#setAddress)
-- [setBusStop()](#setBusStop)
-- [setBusRpte()](#setBusStop)
 - [setBusClock()](#setBusClock)
 - [setPins()](#setPins)
 - [initLastResult()](#initLastResult)
@@ -87,8 +85,6 @@ The library embraces and provides common methods used at every application worki
 - [getAddressMinUsual()](#getAddressLimits)
 - [getAddressMax()](#getAddressLimits)
 - [getAddressMaxUsual()](#getAddressLimits)
-- [getBusStop()](#getBusStop)
-- [getBusRpte()](#getBusStop)
 - [getBusClock()](#getBusClock)
 - [getPinSDA()](#getPins)
 - [getPinSCL()](#getPins)
@@ -96,6 +92,10 @@ The library embraces and provides common methods used at every application worki
 - [isError()](#isError)
 
 #### Protected
+- [setBusStop()](#setBusStop)
+- [setBusRpte()](#setBusStop)
+- [setBusStopFlag()](#setBusStop)
+- [getBusStop()](#getBusStop)
 - [setDelaySend()](#setDelay)
 - [setDelayReceive()](#setDelay)
 - [resetDelaySend()](#setDelay)
@@ -296,19 +296,25 @@ if (Object.setAddress(newAddress) == gbj_twowire::SUCCESS)
 
 
 <a id="setBusStop"></a>
-## setBusStop(), setBusRpte()
+## setBusStop(), setBusRpte(), setBusStopFlag()
 #### Description
-The particular method sets the flag whether stop or repeated start condition should be generated after each end of data transmission or data request.
+The particular method sets the corresponding of provided flag whether stop or repeated start condition should be generated after each end of data transmission or data request on the two-wire bus. The last one is useful at returning back the original flag in procedures that temporary change it.
 
 #### Syntax
     void setBusStop();
     void setBusRpte();
+    void setBusStopFlag(bool busStop);
 
 #### Returns
-None
+- **busStop**: Flag about stop or repeating start condition.
+  - *Valid values*: Boolean
+    - *true*: generating stop condition at the end of transmission on the two-wire bus
+    - *false*: generating repeated start condition at the end of transmission on the two-wire bus
+  - *Default value*: none
+
 
 #### See also
-[getBusStop(), getBusRpte()](#getBusStop)
+[getBusStop()](#getBusStop)
 
 [Back to interface](#interface)
 
@@ -438,9 +444,9 @@ Corresponding address limit.
 
 
 <a id="getBusStop"></a>
-## getBusStop(), getBusRpte()
+## getBusStop()
 #### Description
-The particular method returns a flag about currently generating stop or repeated start condition.
+The method returns a flag about currently generating stop or repeated start condition.
 
 #### Syntax
     bool getBusStop();

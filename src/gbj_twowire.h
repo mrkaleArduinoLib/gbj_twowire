@@ -363,8 +363,6 @@ uint8_t busGeneralReset();
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
 inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
-inline void setBusStop() { setBusStopFlag(true); };
-inline void setBusRpte() { setBusStopFlag(false); };  // Start repeated
 uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 uint8_t setLastResult(uint8_t lastResult = SUCCESS);
@@ -404,8 +402,6 @@ inline uint16_t getLastCommand() { return _busStatus.lastCommand; };
 inline uint32_t getBusClock() { return _busStatus.clock; };  // Bus clock frequency in Hz
 inline bool isSuccess() { return _busStatus.lastResult == SUCCESS; };  // Flag about successful recent operation
 inline bool isError() { return !isSuccess(); };  // Flag about erroneous recent operation
-inline bool getBusStop() { return _busStatus.busStop; };
-inline bool getBusRpte() { return !_busStatus.busStop; };
 
 
 private:
@@ -463,7 +459,6 @@ struct
 // Private methods
 //------------------------------------------------------------------------------
 inline uint16_t setLastCommand(uint16_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
-inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; };
 uint8_t platformWrite(uint8_t data);
 
 
@@ -471,6 +466,10 @@ protected:
 //------------------------------------------------------------------------------
 // Protected methods
 //------------------------------------------------------------------------------
+inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; };
+inline void setBusStop() { setBusStopFlag(true); };
+inline void setBusRpte() { setBusStopFlag(false); };  // Start repeated
+inline bool getBusStop() { return _busStatus.busStop; };
 inline uint8_t getStreamDir() { return _busStatus.streamDirection; };
 inline void setStreamDirLSB() { _busStatus.streamDirection = STREAM_DIR_LSB; };
 inline void setStreamDirMSB() { _busStatus.streamDirection = STREAM_DIR_MSB; };
