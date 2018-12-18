@@ -216,7 +216,7 @@ uint8_t gbj_twowire::busGeneralReset()
 //------------------------------------------------------------------------------
 // Setters
 //------------------------------------------------------------------------------
-uint8_t gbj_twowire::setAddress(uint8_t address)
+uint8_t gbj_twowire::setAddress(uint8_t address, bool noTransmission)
 {
   initLastResult();
   // Invalid address
@@ -231,6 +231,7 @@ uint8_t gbj_twowire::setAddress(uint8_t address)
 #if defined(__AVR__) || defined(PARTICLE)
   if (!getBusStop()) end();
 #endif
+  if (noTransmission) return getLastResult();
   beginTransmission(getAddress());
   return setLastResult(endTransmission(getBusStop()));
 }

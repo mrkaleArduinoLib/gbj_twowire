@@ -264,10 +264,10 @@ Flag about failing of the recent operation on the bus.
 <a id="setAddress"></a>
 ## setAddress()
 #### Description
-The method sets new address of a device in the instance object.
+The method sets new address of a device in the instance object and checks if a device communicates with it on the two-wire bus.
 
 #### Syntax
-    uint8_t setAddress(uint8_t address);
+    uint8_t setAddress(uint8_t address, bool noTransmission);
 
 #### Parameters
 <a id="prm_address"></a>
@@ -275,8 +275,15 @@ The method sets new address of a device in the instance object.
   - *Valid values*: Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two-wire bus. Practically the range is from 3 (0x03), in special cases from 1 (0x01) to 119 (0x77), while addresses outside this range are reserved for special purposes.
   - *Default value*: none
 
+
+- **noTransmission**: Flag about executing the test communication with the address on the bus.
+  - *Valid values*: Boolean
+    - *true*: no test transmission on the two-wire bus
+    - *false*: test transmission just the address to a device
+  - *Default value*: false
+
 #### Returns
-Some of [result or error codes](#constants). In fact, it determines whether the new address is correct and a device communicates on that address.
+Some of [result or error codes](#constants).
 
 #### Example
 ```cpp
