@@ -342,9 +342,9 @@ void gbj_twowire::bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t da
   switch (getStreamDir())
   {
     case STREAM_DIR_MSB:
-    if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB) dataBuffer[dataIdx++] = dataMSB;
-    dataBuffer[dataIdx++] = dataLSB;
-    break;
+      if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB) dataBuffer[dataIdx++] = dataMSB;
+      dataBuffer[dataIdx++] = dataLSB;
+      break;
     case STREAM_DIR_LSB:
     default:
       if ((getStreamBytes() == STREAM_BYTES_ALL) || dataLSB) dataBuffer[dataIdx++] = dataLSB;
