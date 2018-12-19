@@ -363,7 +363,8 @@ uint8_t busGeneralReset();
 // Public setters - they usually return result code or void.
 //------------------------------------------------------------------------------
 inline uint8_t initLastResult() { return _busStatus.lastResult = SUCCESS; };
-uint8_t setAddress(uint8_t address, bool noTransmission = false);
+uint8_t registerAddress(uint8_t address);
+uint8_t setAddress(uint8_t address);
 uint8_t setPins(uint8_t pinSDA, uint8_t pinSCL);
 uint8_t setLastResult(uint8_t lastResult = SUCCESS);
 

@@ -68,6 +68,7 @@ The library embraces and provides common methods used at every application worki
 - [busRead()](#busRead)
 - [busReceive()](#busReceive)
 - [busGeneralReset()](#busGeneralReset)
+- [registerAddress()](#registerAddress)
 
 #### Setters
 - [setLastResult()](#setLastResult)
@@ -261,13 +262,13 @@ Flag about failing of the recent operation on the bus.
 [Back to interface](#interface)
 
 
-<a id="setAddress"></a>
-## setAddress()
+<a id="registerAddress"></a>
+## registerAddress()
 #### Description
-The method sets new address of a device in the instance object and checks if a device communicates with it on the two-wire bus.
+The method stores a new address of a device in the instance object without any activity on the two-wire bus. It just checks whether the address is within valid range.
 
 #### Syntax
-    uint8_t setAddress(uint8_t address, bool noTransmission);
+    uint8_t registerAddress(uint8_t address);
 
 #### Parameters
 <a id="prm_address"></a>
@@ -275,29 +276,42 @@ The method sets new address of a device in the instance object and checks if a d
   - *Valid values*: Only 7-bit addresses 0 ~ 127 (0x00 ~ 0x7F) are allowed on two-wire bus. Practically the range is from 3 (0x03), in special cases from 1 (0x01) to 119 (0x77), while addresses outside this range are reserved for special purposes.
   - *Default value*: none
 
-
-- **noTransmission**: Flag about executing the test communication with the address on the bus.
-  - *Valid values*: Boolean
-    - *true*: no test transmission on the two-wire bus
-    - *false*: test transmission just the address to a device
-  - *Default value*: false
-
 #### Returns
 Some of [result or error codes](#constants).
 
 #### Example
 ```cpp
 gbj_twowire Object = gbj_twowire();
-if (Object.setAddress(newAddress) == gbj_twowire::SUCCESS)
+if (Object.registerAddress(newAddress) == gbj_twowire::SUCCESS)
 {
   Serial.println("Success");
 }
 ```
 
 #### See also
-[getAddress()](#getAddress)
+[setAddress()](#setAddress)
 
-[getLastResult()](#getLastResult)
+[Back to interface](#interface)
+
+
+<a id="setAddress"></a>
+## setAddress()
+#### Description
+The method right after [registering](#registerAddress()) a new address of a device checks if a device communicates with it on the two-wire bus.
+
+#### Syntax
+    uint8_t setAddress(uint8_t address);
+
+#### Parameters
+- **address**: See [parameter](#prm_address) of the method [registerAddress](#registerAddress ).
+
+#### Returns
+Some of [result or error codes](#constants).
+
+#### See also
+[registerAddress()](#registerAddress)
+
+[getAddress()](#getAddress)
 
 [Back to interface](#interface)
 

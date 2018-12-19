@@ -12,6 +12,7 @@ gbj_twowire	KEYWORD1
 #######################################
 begin	KEYWORD2
 release	KEYWORD2
+registerAddress	KEYWORD2
 setAddress	KEYWORD2
 setBusStop	KEYWORD2
 setBusRpte	KEYWORD2

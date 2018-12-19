@@ -213,10 +213,7 @@ uint8_t gbj_twowire::busGeneralReset()
 }
 
 
-//------------------------------------------------------------------------------
-// Setters
-//------------------------------------------------------------------------------
-uint8_t gbj_twowire::setAddress(uint8_t address, bool noTransmission)
+uint8_t gbj_twowire::registerAddress(uint8_t address)
 {
   initLastResult();
   // Invalid address
@@ -228,10 +225,16 @@ uint8_t gbj_twowire::setAddress(uint8_t address, bool noTransmission)
   if (address == getAddress()) return getLastResult();
   // Set changed address
   _busStatus.address = address;
-#if defined(__AVR__) || defined(PARTICLE)
-  if (!getBusStop()) end();
-#endif
-  if (noTransmission) return getLastResult();
+ return getLastResult();
+}
+
+
+//------------------------------------------------------------------------------
+// Setters
+//------------------------------------------------------------------------------
+uint8_t gbj_twowire::setAddress(uint8_t address)
+{
+  if (registerAddress(address)) return getLastResult();
   beginTransmission(getAddress());
   return setLastResult(endTransmission(getBusStop()));
 }
