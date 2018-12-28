@@ -292,21 +292,6 @@ uint8_t busSend(uint16_t command, uint16_t data);
 
 
 /*
-  Read one byte from the two-wire bus.
-
-  DESCRIPTION:
-  The method reads one byte from the two-wire bus in respect to the current
-  platform.
-
-  PARAMETERS: none
-
-  RETURN:
-  Data byte read from the bus.
-*/
-uint8_t busRead();
-
-
-/*
   Read byte stream from the two-wire bus.
 
   DESCRIPTION:
@@ -461,6 +446,7 @@ struct
 //------------------------------------------------------------------------------
 inline uint16_t setLastCommand(uint16_t lastCommand) { return _busStatus.lastCommand = lastCommand; };
 uint8_t platformWrite(uint8_t data);
+uint8_t platformRead();
 
 
 protected:

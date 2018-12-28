@@ -149,16 +149,6 @@ uint8_t gbj_twowire::busSend(uint16_t command, uint16_t data)
 }
 
 
-uint8_t gbj_twowire::busRead()
-{
-  #if ARDUINO >= 100
-    return read();
-  #else
-    return receive();
-  #endif
-}
-
-
 uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
 {
   bool origBusStop = getBusStop();
@@ -170,13 +160,12 @@ uint8_t gbj_twowire::busReceive(uint8_t *dataBuffer, uint16_t dataLen)
     uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
     // Return original flag before last page
     if (pageLen >= dataLen) setBusStopFlag(origBusStop);
-    beginTransmission(getAddress());
     if (requestFrom(getAddress(), pageLen, (uint8_t) getBusStop()) > 0 \
     && available() >= pageLen)
     {
       for (uint8_t i = 0; i < pageLen; i++)
       {
-        *dataBuffer++ = busRead();
+        *dataBuffer++ = platformRead();
       }
     }
     else
@@ -334,6 +323,17 @@ uint8_t gbj_twowire::platformWrite(uint8_t data)
     return send(data);
   #endif
 }
+
+
+uint8_t gbj_twowire::platformRead()
+{
+  #if ARDUINO >= 100
+    return read();
+  #else
+    return receive();
+  #endif
+}
+
 
 void gbj_twowire::bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t data)
 {

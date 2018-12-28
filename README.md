@@ -65,7 +65,6 @@ The library embraces and provides common methods used at every application worki
 - [busSendStream()](#busSendStream)
 - [busSendStreamPrefixed()](#busSendStreamPrefixed)
 - [busSend()](#busSend)
-- [busRead()](#busRead)
 - [busReceive()](#busReceive)
 - [busGeneralReset()](#busGeneralReset)
 - [registerAddress()](#registerAddress)
@@ -727,26 +726,6 @@ Some of [result or error codes](#constants).
 [Back to interface](#interface)
 
 
-<a id="busRead"></a>
-## busRead()
-#### Description
-The method reads one byte from the two-wire bus.
-
-#### Syntax
-    uint8_t busRead();
-
-#### Parameters
-None
-
-#### Returns
-Data byte read from the bus.
-
-#### See also
-[busReceive()](#busReceive)
-
-[Back to interface](#interface)
-
-
 <a id="busReceive"></a>
 ## busReceive()
 #### Description
@@ -795,7 +774,7 @@ else
 ```
 
 #### See also
-[busRead()](#busRead)
+[busSend()](#busSend)
 
 [Back to interface](#interface)
 

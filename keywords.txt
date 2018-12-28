@@ -50,7 +50,6 @@ isError	KEYWORD2
 busSendStream	KEYWORD2
 busSendStreamPrefixed	KEYWORD2
 busSend	KEYWORD2
-busRead	KEYWORD2
 busReceive	KEYWORD2
 busGeneralReset	KEYWORD2
 wait	KEYWORD2
