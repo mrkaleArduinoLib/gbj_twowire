@@ -126,7 +126,7 @@ gbj_twowire(uint32_t clockSpeed = CLOCK_100KHZ, uint8_t pinSDA = 4, uint8_t pinS
   Initialize two wire bus and check parameters stored by constructor.
 
   DESCRIPTION:
-  The method validate pin definitions from constructor for software defined
+  The method validates pin definitions from constructor for software defined
   I2C bus microcontrollers (ESP8266, ESP32).
 
   PARAMETERS: none
