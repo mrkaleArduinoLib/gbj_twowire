@@ -12,66 +12,67 @@
   CREDENTIALS:
   Author: Libor Gabaj
 */
-#define SKETCH "GBJ_TWOWIRE_DEMO 1.0.1"
-
-#include <gbj_twowire.h>
+#include "gbj_twowire.h"
 
 // Comment/Uncomment/Update the good and wrong value for experimenting
-const byte ADDRESS_DEVICE = 0x23;  // Good
+const byte ADDRESS_DEVICE = 0x23; // Good for BH1750FVI
 // const byte ADDRESS_DEVICE = 0x24;  // Wrong
-gbj_twowire Device = gbj_twowire();
-// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_400KHZ);
-// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ);
-// gbj_twowire Device = gbj_twowire(gbj_twowire::CLOCK_100KHZ, D2, D1);
-
+gbj_twowire device = gbj_twowire();
+// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_400KHZ);
+// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_100KHZ);
+// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_100KHZ, D2,
+// D1);
 
 void errorHandler(String location)
 {
-  if (Device.isSuccess()) return;
+  if (device.isSuccess())
+  {
+    return;
+  }
   Serial.print(location);
   Serial.print(" - Error: ");
-  Serial.print(Device.getLastResult());
+  Serial.print(device.getLastResult());
   Serial.print(" - ");
-  switch (Device.getLastResult())
+  switch (device.getLastResult())
   {
     // General
-    case gbj_twowire::ERROR_ADDRESS:
+    case gbj_twowire::ResultCodes::ERROR_ADDRESS:
       Serial.println("ERROR_ADDRESS");
       break;
 
-    case gbj_twowire::ERROR_PINS:
+    case gbj_twowire::ResultCodes::ERROR_PINS:
       Serial.println("ERROR_PINS");
       break;
 
-    // Arduino, Esspressif specific
+      // Arduino, Esspressif specific
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-    case gbj_twowire::ERROR_BUFFER:
+    case gbj_twowire::ResultCodes::ERROR_BUFFER:
       Serial.println("ERROR_BUFFER");
       break;
 
-    case gbj_twowire::ERROR_NACK_DATA:
+    case gbj_twowire::ResultCodes::ERROR_NACK_DATA:
       Serial.println("ERROR_NACK_DATA");
       break;
 
-    case gbj_twowire::ERROR_NACK_OTHER:
+    case gbj_twowire::ResultCodes::ERROR_NACK_OTHER:
       Serial.println("ERROR_NACK_OTHER");
       break;
 
-    // Particle specific
+      // Particle specific
 #elif defined(PARTICLE)
-    case gbj_twowire::ERROR_BUSY:
+    case gbj_twowire::ResultCodes::ERROR_BUSY:
       Serial.println("ERROR_BUSY");
       break;
 
-    case gbj_twowire::ERROR_END:
+    case gbj_twowire::ResultCodes::ERROR_END:
       Serial.println("ERROR_END");
       break;
 
-    case gbj_twowire::ERROR_TRANSFER:
+    case gbj_twowire::ResultCodes::ERROR_TRANSFER:
       Serial.println("ERROR_TRANSFER");
       break;
 
-    case gbj_twowire::ERROR_TIMEOUT:
+    case gbj_twowire::ResultCodes::ERROR_TIMEOUT:
       Serial.println("ERROR_TIMEOUT");
       break;
 #endif
@@ -82,40 +83,38 @@ void errorHandler(String location)
   }
 }
 
-
 void setup()
 {
   Serial.begin(9600);
   // Test constructor success
-  if (Device.isError())
+  if (device.isError())
   {
     errorHandler("Constructor");
     return;
   }
   // Initial two-wire bus
-  if (Device.begin())
+  if (device.begin())
   {
     errorHandler("Begin");
     return;
   }
   // Set and test address
-  Device.setAddress(ADDRESS_DEVICE);
-  if (Device.isError())
+  device.setAddress(ADDRESS_DEVICE);
+  if (device.isError())
   {
     errorHandler("Address");
     return;
   }
   Serial.print("Address: 0x");
-  Serial.println(Device.getAddress(), HEX);
+  Serial.println(device.getAddress(), HEX);
   Serial.print("Bus Clock: ");
-  Serial.print(Device.getBusClock() / 1000);
+  Serial.print(device.getBusClock() / 1000);
   Serial.println(" kHz");
   Serial.print("Pin SDA: ");
-  Serial.println(Device.getPinSDA());
+  Serial.println(device.getPinSDA());
   Serial.print("Pin SCL: ");
-  Serial.println(Device.getPinSCL());
+  Serial.println(device.getPinSCL());
   Serial.println("---");
-  Serial.println("END");
 }
 
 void loop() {}
