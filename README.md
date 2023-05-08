@@ -54,6 +54,20 @@ The library embraces and provides common methods used at every application worki
 * **ResultCodes::ERROR\_PINS**: For software defined two-wire bus platforms at bad defined bus pins (<abbr title='General Purpose Input Output'>GPIO</abbr>), usually both are the same.
 * **ResultCodes::ERROR\_RCV\_DATA**: Received data is zero or shorter than expected.
 
+### Referencing constants
+In a sketch the constants can be referenced in following forms:
+* **Static constant** in the form `gbj_twowire::<enumeration>::<constant>` or shortly `gbj_twowire::<constant>`, e.g., _gbj_twowire::ResultCodes::SUCCESS_ or _gbj_twowire::SUCCESS_.
+* **Instance constant** in the form `<object>.<constant>`, e.g., _object.SUCCESS_.
+```cpp
+gbj_twowire object = gbj_twowire(object.CLOCK_400KHZ);
+setup()
+{
+  if (object.begin() == object.SUCCESS)
+  {
+    ...
+  }
+}
+```
 
 <a id="interface"></a>
 
@@ -201,12 +215,17 @@ None
 
 #### Description
 The method returns a flag whether the recent operation on the two-wire bus was successful.
+- The method is overloaded. If the input argument is used, it is used and internally saved instead of recently saved code.
+- The method with input argument is useful for calling inline method or function returning the code.
 
 #### Syntax
     boolean isSuccess()
+    boolean isSuccess(ResultCodes lastResult)
 
 #### Parameters
-None
+* **lastResult**: Result code of a recent operation usually returned by a method or function.
+  * *Valid values*: Some of [result or error codes](#constants).
+  * *Default value*: none
 
 #### Returns
 Flag about successful processing of the recent operation on the bus.
@@ -225,12 +244,17 @@ Flag about successful processing of the recent operation on the bus.
 
 #### Description
 The method returns a flag whether the recent operation on the two-wire bus failed. The corresponding error code can be obtained by the method [getLastResult()](#getLastResult), which is one of error [constants](#constants).
+- The method is overloaded. If the input argument is used, it is used and internally saved instead of recently saved code.
+- The method with input argument is useful for calling inline method or function returning the code.
 
 #### Syntax
     boolean isError()
+    boolean isError(ResultCodes lastResult)
 
 #### Parameters
-None
+* **lastResult**: Result code of a recent operation usually returned by a method or function.
+  * *Valid values*: Some of [result or error codes](#constants).
+  * *Default value*: none
 
 #### Returns
 Flag about failing of the recent operation on the bus.

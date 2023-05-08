@@ -136,7 +136,7 @@ public:
 
     PARAMETERS: none
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   inline ResultCodes begin()
   {
@@ -197,7 +197,7 @@ public:
         false: sending from the first to the last byte order
         true: sending from the last to the first byte order
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   ResultCodes busSendStream(uint8_t *dataBuffer,
                             uint16_t dataLen,
@@ -266,7 +266,7 @@ public:
         true: prefix buffer sent once before start of sending data
         buffer
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   ResultCodes busSendStreamPrefixed(uint8_t *dataBuffer,
                                     uint16_t dataLen,
@@ -306,7 +306,7 @@ public:
       - Default value: none
       - Limited range: 0 ~ 65535
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   inline ResultCodes busSend(uint16_t data)
   {
@@ -363,7 +363,7 @@ public:
       - Default value: none
       - Limited range: 0 ~ 65535
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   ResultCodes busReceive(uint8_t *dataBuffer, uint16_t dataLen);
   ResultCodes busReceive(uint16_t command,
@@ -380,7 +380,7 @@ public:
 
     PARAMETERS: none
 
-    RETURN: Result code.
+    RETURN: Result code
   */
   inline ResultCodes busGeneralReset()
   {
@@ -506,13 +506,34 @@ public:
   inline uint16_t getLastCommand() { return _busStatus.lastCommand; };
   // Bus clock frequency in Hz
   inline ClockSpeed getBusClock() { return _busStatus.clock; }
-  // Flag about successful recent operation
+
+  /*
+    Flag about successful or erroneous recent operation.
+
+    DESCRIPTION:
+    Method is overloaded.
+
+    PARAMETERS:
+    lastResult - Directly input result code usually returned from inline method
+    or function. At absence of the input argument the stored code of recent
+    operation is used.
+      - Data type: ResultCodes
+      - Default value: none
+      - Limited range: enumeration
+
+    RETURN: Boolean flag about success of the recent operation
+  */
   inline bool isSuccess()
   {
     return _busStatus.lastResult == ResultCodes::SUCCESS;
   }
-  // Flag about erroneous recent operation
+  inline bool isSuccess(ResultCodes lastResult)
+  {
+    _busStatus.lastResult = lastResult;
+    return isSuccess();
+  }
   inline bool isError() { return !isSuccess(); }
+  inline bool isError(ResultCodes lastResult) { return !isSuccess(lastResult); }
 
 private:
   enum AddressRange : uint8_t
@@ -566,6 +587,52 @@ private:
   inline uint16_t setLastCommand(uint16_t lastCommand)
   {
     return _busStatus.lastCommand = lastCommand;
+  }
+
+  /*
+    Buffer data word.
+
+    DESCRIPTION:
+    The method updates provided buffer from provided index with provided data
+    according to current streaming modes (STREAM_DIR_LSB ... STREAM_BYTES_VAL)
+    and updates that index.
+
+    PARAMETERS:
+    dataBuffer - Pointer to the byte data buffer, which should be updated.
+      - Data type: non-negative integer
+      - Default value: none
+      - Limited range: address space
+
+    dataIdx - Index to the buffer where update should start.
+      - Data type: non-negative integer
+      - Default value: none
+      - Limited range: 0 ~ 65535
+
+    data - Data word, which should be analyzed and written to the buffer.
+      - Data type: non-negative integer
+      - Default value: none
+      - Limited range: 0 ~ 65535
+
+    RETURN: None
+  */
+  inline void bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t data)
+  {
+    uint8_t dataLSB = data & 0xFF;
+    uint8_t dataMSB = (data >> 8) & 0xFF;
+    switch (getStreamDir())
+    {
+      case STREAM_DIR_MSB:
+        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB)
+          dataBuffer[dataIdx++] = dataMSB;
+        dataBuffer[dataIdx++] = dataLSB;
+        break;
+      case STREAM_DIR_LSB:
+      default:
+        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataLSB)
+          dataBuffer[dataIdx++] = dataLSB;
+        dataBuffer[dataIdx++] = dataMSB;
+        break;
+    }
   }
 
 protected:
@@ -695,52 +762,6 @@ protected:
     }
 #endif
     setBusClock(getBusClock());
-  }
-
-  /*
-    Buffer data word.
-
-    DESCRIPTION:
-    The method updates provided buffer from provided index with provided data
-    according to current streaming modes (STREAM_DIR_LSB ... STREAM_BYTES_VAL)
-    and updates that index.
-
-    PARAMETERS:
-    dataBuffer - Pointer to the byte data buffer, which should be updated.
-      - Data type: non-negative integer
-      - Default value: none
-      - Limited range: address space
-
-    dataIdx - Index to the buffer where update should start.
-      - Data type: non-negative integer
-      - Default value: none
-      - Limited range: 0 ~ 65535
-
-    data - Data word, which should be analyzed and written to the buffer.
-      - Data type: non-negative integer
-      - Default value: none
-      - Limited range: 0 ~ 65535
-
-    RETURN: None
-  */
-  inline void bufferData(uint8_t *dataBuffer, uint16_t &dataIdx, uint16_t data)
-  {
-    uint8_t dataLSB = data & 0xFF;
-    uint8_t dataMSB = (data >> 8) & 0xFF;
-    switch (getStreamDir())
-    {
-      case STREAM_DIR_MSB:
-        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB)
-          dataBuffer[dataIdx++] = dataMSB;
-        dataBuffer[dataIdx++] = dataLSB;
-        break;
-      case STREAM_DIR_LSB:
-      default:
-        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataLSB)
-          dataBuffer[dataIdx++] = dataLSB;
-        dataBuffer[dataIdx++] = dataMSB;
-        break;
-    }
   }
 };
 
