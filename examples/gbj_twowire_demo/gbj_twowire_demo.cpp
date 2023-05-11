@@ -25,67 +25,14 @@ gbj_twowire device = gbj_twowire();
 
 void errorHandler(String location)
 {
-  if (device.isSuccess())
-  {
-    return;
-  }
-  Serial.print(location);
-  Serial.print(" - Error: ");
-  Serial.print(device.getLastResult());
-  Serial.print(" - ");
-  switch (device.getLastResult())
-  {
-    // General
-    case gbj_twowire::ResultCodes::ERROR_ADDRESS:
-      Serial.println("ERROR_ADDRESS");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_PINS:
-      Serial.println("ERROR_PINS");
-      break;
-
-      // Arduino, Esspressif specific
-#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-    case gbj_twowire::ResultCodes::ERROR_BUFFER:
-      Serial.println("ERROR_BUFFER");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_NACK_DATA:
-      Serial.println("ERROR_NACK_DATA");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_NACK_OTHER:
-      Serial.println("ERROR_NACK_OTHER");
-      break;
-
-      // Particle specific
-#elif defined(PARTICLE)
-    case gbj_twowire::ResultCodes::ERROR_BUSY:
-      Serial.println("ERROR_BUSY");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_END:
-      Serial.println("ERROR_END");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_TRANSFER:
-      Serial.println("ERROR_TRANSFER");
-      break;
-
-    case gbj_twowire::ResultCodes::ERROR_TIMEOUT:
-      Serial.println("ERROR_TIMEOUT");
-      break;
-#endif
-
-    default:
-      Serial.println("Uknown error");
-      break;
-  }
+  Serial.println(device.getLastErrorTxt(location));
+  Serial.println("---");
 }
 
 void setup()
 {
   Serial.begin(9600);
+  Serial.println("---");
   // Test constructor success
   if (device.isError())
   {
@@ -93,14 +40,13 @@ void setup()
     return;
   }
   // Initial two-wire bus
-  if (device.begin())
+  if (device.isError(device.begin()))
   {
     errorHandler("Begin");
     return;
   }
   // Set and test address
-  device.setAddress(ADDRESS_DEVICE);
-  if (device.isError())
+  if (device.isError(device.setAddress(ADDRESS_DEVICE)))
   {
     errorHandler("Address");
     return;

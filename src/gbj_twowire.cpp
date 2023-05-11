@@ -6,7 +6,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStream(uint8_t *dataBuffer,
 {
   bool origBusStop = getBusStop();
   setLastResult();
-  setBusRpte();
+  setBusRepeat();
   if (dataReverse)
   {
     dataBuffer += dataLen;
@@ -56,7 +56,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer,
   bool origBusStop = getBusStop();
   bool prfxExec = true;
   setLastResult();
-  setBusRpte();
+  setBusRepeat();
   if (dataReverse)
   {
     dataBuffer += dataLen;
@@ -129,7 +129,7 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
 {
   bool origBusStop = getBusStop();
   setLastResult();
-  setBusRpte();
+  setBusRepeat();
   waitTimestampReceive();
   while (dataLen)
   {
@@ -163,7 +163,7 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint16_t command,
                                                  uint16_t dataLen)
 {
   bool origBusStop = getBusStop();
-  setBusRpte();
+  setBusRepeat();
   if (busSend(setLastCommand(command)))
   {
     return getLastResult();

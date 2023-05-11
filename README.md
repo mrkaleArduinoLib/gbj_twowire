@@ -1,5 +1,5 @@
 # gbjTwoWire
-The library embraces and provides common methods used at every application working with sensor on `two-wire` (alsa known as <abbr title='Inter-Integrated Circuit'>I2C</abbr>) bus.
+The library embraces and provides common methods used at every application working with sensor on `two-wire` (also known as <abbr title='Inter-Integrated Circuit'>I2C</abbr>) bus.
 
 * Library specifies (inherits from) the system `TwoWire` library from the file `Wire.h`.
 * The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
@@ -53,6 +53,8 @@ The library embraces and provides common methods used at every application worki
 * **ResultCodes::ERROR\_ADDRESS**: Platform specific error code at bad address.
 * **ResultCodes::ERROR\_PINS**: For software defined two-wire bus platforms at bad defined bus pins (<abbr title='General Purpose Input Output'>GPIO</abbr>), usually both are the same.
 * **ResultCodes::ERROR\_RCV\_DATA**: Received data is zero or shorter than expected.
+* **ResultCodes::ERROR\_POSITION**: Wrong position in memory; either 0 or no sufficient space for data storing or retrieving.
+* **ResultCodes::ERROR\_DEVICE**: Wrong device type or other device fault.
 
 ### Referencing constants
 In a sketch the constants can be referenced in following forms:
@@ -88,9 +90,12 @@ setup()
 * [setAddress()](#setAddress)
 * [setBusClock()](#setBusClock)
 * [setPins()](#setPins)
+* [setDelaySend()](#setDelay)
+* [setDelayReceive()](#setDelay)
 
 #### Getters
 * [getLastResult()](#getLastResult)
+* [getLastErrorTxt()](#getLastErrorTxt)
 * [getLastCommand()](#getLastResult)
 * [getAddress()](#getAddress)
 * [getAddressMin()](#getAddressLimits)
@@ -106,13 +111,9 @@ setup()
 
 #### Protected
 * [setBusStop()](#setBusStop)
-* [setBusRpte()](#setBusStop)
+* [setBusRepeat()](#setBusStop)
 * [setBusStopFlag()](#setBusStop)
 * [getBusStop()](#getBusStop)
-* [setDelaySend()](#setDelay)
-* [setDelayReceive()](#setDelay)
-* [resetDelaySend()](#setDelay)
-* [resetDelayReceive()](#setDelay)
 * [getDelaySend()](#getDelay)
 * [getDelayReceive()](#getDelay)
 * [setTimestampSend()](#setTimestamp)
@@ -140,7 +141,7 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
     gbj_twowire(ClockSpeed clockSpeed, uint8_t pinSDA, uint8_t pinSCL)
 
 #### Parameters
-* **clockSpeed**: Initial two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
+* **clockSpeed**: Initial two-wire bus clock frequency in Hertz.
   * *Valid values*: ClockSpeed::CLOCK\_100KHZ, ClockSpeed::CLOCK\_400KHZ
   * *Default value*: ClockSpeed::CLOCK\_100KHZ
 
@@ -327,14 +328,14 @@ Some of [result or error codes](#constants).
 
 <a id="setBusStop"></a>
 
-## setBusStop(), setBusRpte(), setBusStopFlag()
+## setBusStop(), setBusRepeat(), setBusStopFlag()
 
 #### Description
-The particular method sets the corresponding flag of provided ones whether stop or repeated start condition should be generated after each end of data transmission or data request on the two-wire bus. The last one is useful at returning back the original flag in procedures that temporary change it.
+The particular method sets the corresponding flag whether stop or repeated start condition should be generated after each end of data transmission or data request on the two-wire bus. The last one is useful at returning back the original flag in procedures that temporary change it.
 
 #### Syntax
     void setBusStop()
-    void setBusRpte()
+    void setBusRepeat()
     void setBusStopFlag(bool busStop)
 
 #### Returns
@@ -496,7 +497,7 @@ None
 Current stopping or repeated start flag.
 
 #### See also
-[setBusStop(), setBusRpte()](#setBusStop)
+[setBusStop(), setBusRepeat()](#setBusStop)
 
 [Back to interface](#interface)
 
@@ -598,6 +599,27 @@ else
 
 #### See also
 [setLastResult()](#setLastResult)
+
+[Back to interface](#interface)
+
+
+<a id="getLastErrorTxt"></a>
+
+## getLastErrorTxt()
+
+#### Description
+The method translates internally stored error code of the recent operation to corresponding wording.
+
+#### Syntax
+    String getLastErrorTxt(String location)
+
+#### Parameters
+* **location**: Location of the error code in a sketch utilized as an error text prefix.
+  * *Valid values*: String
+  * *Default value*: empty string
+
+#### Returns
+Textual representation or wording of the error code.
 
 [Back to interface](#interface)
 
@@ -822,17 +844,16 @@ Some of [result or error codes](#constants).
 
 <a id="setDelay"></a>
 
-## setDelaySend(), resetDelaySend(), setDelayReceive(), resetDelayReceive()
+## setDelaySend(), setDelayReceive()
 
 #### Description
-The particular method sets or erases delay for waiting before subsequent sending or receving transmission until that time period expires from finishing that previous transmission.
+The particular method sets delay for waiting before subsequent sending or receving transmission until that time period expires from finishing that previous transmission.
 * In order not to block system, the method does not wait after a transmission, but before transmissions for delay expiring. It gives the system a chance to perform some tasks after communication on the bus, which might last the desired delay, so that the method does not block the system uselessly.
+* In order to reset the delay, put 0 to input argument.
 
 #### Syntax
     void setDelaySend(uint32_t delay)
-    void resetDelaySend()
     void setDelayReceive(uint32_t delay)
-    void resetDelayReceive()
 
 #### Parameters
 * **delay**: Delaying time period in milliseconds.
@@ -870,7 +891,7 @@ None
 Particular current delay in milliseconds.
 
 #### See also
-[setDelaySend(), resetDelaySend(), setDelayReceive(), resetDelayReceive()](#setDelay)
+[setDelaySend(), setDelayReceive()](#setDelay)
 
 [Back to interface](#interface)
 

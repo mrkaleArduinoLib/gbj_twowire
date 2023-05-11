@@ -1,6 +1,6 @@
 /*
   NAME:
-  gbj_twowire
+  gbjTwoWire
 
   DESCRIPTION:
   Library embraces and provides common methods used at every application
@@ -69,8 +69,12 @@ public:
     ERROR_PINS = 10,
     // Less data received than expected
     ERROR_RCV_DATA = 11,
+    // Wrong position in memory; either 0 or no sufficient space for data
+    // storing or retrieving
+    ERROR_POSITION = 12,
+    // Wrong device type or other device fault
+    ERROR_DEVICE = 13,
   };
-
   enum ClockSpeed : uint32_t
   {
     CLOCK_100KHZ = 100000L,
@@ -494,7 +498,6 @@ public:
     }
     return _busStatus.lastResult;
   }
-
   inline uint8_t getAddress() { return _busStatus.address; };
   inline uint8_t getAddressMin() { return ADDRESS_MIN; }; // Adress limits...
   inline uint8_t getAddressMax() { return ADDRESS_MAX; };
@@ -534,6 +537,136 @@ public:
   }
   inline bool isError() { return !isSuccess(); }
   inline bool isError(ResultCodes lastResult) { return !isSuccess(lastResult); }
+
+  /*
+    Convert error code to text.
+
+    DESCRIPTION:
+    Method translates internally stored error code of the recent operation to
+    corresponding wording.
+
+    PARAMETERS:
+    location - Location of the error code in a sketch utilized as an error text
+    prefix.
+      - Data type: String
+      - Default value: none
+      - Limited range: none
+
+    RETURN: Textual wording of an error code
+  */
+  inline String getLastErrorTxt(String location = "")
+  {
+    String result = "";
+    // Ignore success code
+    if (_busStatus.lastResult == ResultCodes::SUCCESS)
+    {
+      return result;
+    }
+    result += location.length() ? location + "::" : "";
+    result += "Error: ";
+    switch (_busStatus.lastResult)
+    {
+      // General
+      case ResultCodes::ERROR_ADDRESS:
+        result += "ERROR_ADDRESS";
+        break;
+
+      case ResultCodes::ERROR_PINS:
+        result += "ERROR_PINS";
+        break;
+
+      case ResultCodes::ERROR_RCV_DATA:
+        result += "ERROR_RCV_DATA";
+        break;
+
+      case ResultCodes::ERROR_POSITION:
+        result += "ERROR_POSITION";
+        break;
+
+      case ResultCodes::ERROR_DEVICE:
+        result += "ERROR_DEVICE";
+        break;
+
+        // Arduino, Esspressif specific
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
+      case ResultCodes::ERROR_BUFFER:
+        result += "ERROR_BUFFER";
+        break;
+
+      case ResultCodes::ERROR_NACK_DATA:
+        result += "ERROR_NACK_DATA";
+        break;
+
+      case ResultCodes::ERROR_NACK_OTHER:
+        result += "ERROR_NACK_OTHER";
+        break;
+
+          // Particle specific
+#elif defined(PARTICLE)
+      case ResultCodes::ERROR_BUSY:
+        result += "ERROR_BUSY";
+        break;
+
+      case ResultCodes::ERROR_END:
+        result += "ERROR_END";
+        break;
+
+      case ResultCodes::ERROR_TRANSFER:
+        result += "ERROR_TRANSFER";
+        break;
+
+      case ResultCodes::ERROR_TIMEOUT:
+        result += "ERROR_TIMEOUT";
+        break;
+#endif
+      default:
+        result += "ERROR_UKNOWN";
+        break;
+    }
+    result += " (" + String(_busStatus.lastResult) + ")";
+    return result;
+  }
+  /*
+    Set delay for waiting after each sending transmission to settle a
+    ResultCodes::
+
+    DESCRIPTION:
+    If a delay value is set, than the library waits before subsequent sending
+    transmission until that time period expires from finishing previous sending
+    transmission.
+
+    PARAMETERS:
+    delay - Delaying time period in milliseconds.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 2^32 - 1
+
+    RETURN: none
+  */
+  inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; }
+  inline uint32_t getDelaySend() { return _busStatus.sendDelay; }
+
+  /*
+    Set delay for waiting after each receiving transmission to settle a device.
+
+    DESCRIPTION:
+    If a delay value is set, than the library waits before subsequent receiving
+    transmission until that time period expires from finishing previous
+    receiving transmission.
+
+    PARAMETERS:
+    delay - Delaying time period in milliseconds.
+            - Data type: non-negative integer
+            - Default value: none
+            - Limited range: 0 ~ 2^32 - 1
+
+    RETURN: none
+  */
+  inline void setDelayReceive(uint32_t delay)
+  {
+    _busStatus.receiveDelay = delay;
+  }
+  inline uint32_t getDelayReceive() { return _busStatus.receiveDelay; }
 
 private:
   enum AddressRange : uint8_t
@@ -638,7 +771,7 @@ private:
 protected:
   inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; }
   inline void setBusStop() { setBusStopFlag(true); }
-  inline void setBusRpte() { setBusStopFlag(false); } // Start repeated
+  inline void setBusRepeat() { setBusStopFlag(false); } // Start repeated
   inline bool getBusStop() { return _busStatus.busStop; }
   inline uint8_t getStreamDir() { return _busStatus.streamDirection; }
   inline void setStreamDirLSB() { _busStatus.streamDirection = STREAM_DIR_LSB; }
@@ -648,64 +781,26 @@ protected:
   inline void setStreamBytesVal() { _busStatus.streamBytes = STREAM_BYTES_VAL; }
   inline void setStreamBytesAll() { _busStatus.streamBytes = STREAM_BYTES_ALL; }
   inline void setStreamBytesDft() { setStreamBytesVal(); }
-  /*
-    Set delay for waiting after each sending transmission to settle a device.
-
-    DESCRIPTION:
-    If a delay value is set, than the library waits before subsequent sending
-    transmission until that time period expires from finishing previous sending
-    transmission.
-
-    PARAMETERS:
-    delay - Delaying time period in milliseconds.
-            - Data type: non-negative integer
-            - Default value: none
-            - Limited range: 0 ~ 2^32 - 1
-
-    RETURN: none
-  */
-  inline void setDelaySend(uint32_t delay) { _busStatus.sendDelay = delay; }
-  inline void resetDelaySend() { _busStatus.sendDelay = 0; }
-  inline uint32_t getDelaySend() { return _busStatus.sendDelay; }
-  inline void setTimestampSend() { _busStatus.sendTimestamp = millis(); }
-  inline void resetTimestampSend() { _busStatus.sendTimestamp = 0; }
+  inline void setTimestampSend(uint32_t timestamp = millis())
+  {
+    _busStatus.sendTimestamp = timestamp;
+  }
+  inline uint32_t getTimestampSend() { return _busStatus.sendTimestamp; }
   inline void waitTimestampSend()
   {
     while (millis() - _busStatus.sendTimestamp < getDelaySend())
       ;
   }
-  inline uint32_t getTimestampSend() { return _busStatus.sendTimestamp; }
-  /*
-    Set delay for waiting after each receiving transmission to settle a device.
-
-    DESCRIPTION:
-    If a delay value is set, than the library waits before subsequent receiving
-    transmission until that time period expires from finishing previous
-    receiving transmission.
-
-    PARAMETERS:
-    delay - Delaying time period in milliseconds.
-            - Data type: non-negative integer
-            - Default value: none
-            - Limited range: 0 ~ 2^32 - 1
-
-    RETURN: none
-  */
-  inline void setDelayReceive(uint32_t delay)
+  inline void setTimestampReceive(uint32_t timestamp = millis())
   {
-    _busStatus.receiveDelay = delay;
+    _busStatus.receiveTimestamp = timestamp;
   }
-  inline void resetDelayReceive() { _busStatus.receiveDelay = 0; }
-  inline uint32_t getDelayReceive() { return _busStatus.receiveDelay; }
-  inline void setTimestampReceive() { _busStatus.receiveTimestamp = millis(); }
-  inline void resetTimestampReceive() { _busStatus.receiveTimestamp = 0; }
   inline void waitTimestampReceive()
   {
     while (millis() - _busStatus.receiveTimestamp < getDelayReceive())
       ;
   }
   inline uint32_t getTimestampReceive() { return _busStatus.receiveTimestamp; }
-
   /*
     Wait for a period of time.
 
@@ -728,7 +823,6 @@ protected:
       ;
     }
   }
-
   /*
     Initialize two-wire bus if it is not yet.
 
