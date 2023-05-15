@@ -66,16 +66,26 @@ public:
     ERROR_ADDRESS = ERROR_START,
 #endif
     // Error defining pins, usually both are the same
-    ERROR_PINS = 10,
+    ERROR_PINS = 255,
     // Less data received than expected
-    ERROR_RCV_DATA = 11,
+    ERROR_RCV_DATA = 254,
     // Wrong position in memory; either 0 or no sufficient space for data
     // storing or retrieving
-    ERROR_POSITION = 12,
+    ERROR_POSITION = 253,
     // Wrong device type or other device fault
-    ERROR_DEVICE = 13,
+    ERROR_DEVICE = 252,
+    // Device reset failure
+    ERROR_RESET = 251,
+    // Firmware reading failure
+    ERROR_FIRMWARE = 250,
+    // Serial number reading failure
+    ERROR_SN = 249,
+    // Measuring failure
+    ERROR_MEASURE = 248,
+    // Operation with a register failure
+    ERROR_REGISTER = 247,
   };
-  enum ClockSpeed : uint32_t
+  enum ClockSpeeds : uint32_t
   {
     CLOCK_100KHZ = 100000L,
     CLOCK_400KHZ = 400000L,
@@ -108,7 +118,7 @@ public:
 
     RETURN: object
   */
-  inline gbj_twowire(ClockSpeed clockSpeed = ClockSpeed::CLOCK_100KHZ,
+  inline gbj_twowire(ClockSpeeds clockSpeed = ClockSpeeds::CLOCK_100KHZ,
                      uint8_t pinSDA = 4,
                      uint8_t pinSCL = 5)
   {
@@ -470,16 +480,16 @@ public:
 
     RETURN: none
   */
-  inline void setBusClock(ClockSpeed clockSpeed)
+  inline void setBusClock(ClockSpeeds clockSpeed)
   {
     switch (clockSpeed)
     {
-      case ClockSpeed::CLOCK_100KHZ:
-      case ClockSpeed::CLOCK_400KHZ:
+      case ClockSpeeds::CLOCK_100KHZ:
+      case ClockSpeeds::CLOCK_400KHZ:
         _busStatus.clock = clockSpeed;
         break;
       default:
-        _busStatus.clock = ClockSpeed::CLOCK_100KHZ;
+        _busStatus.clock = ClockSpeeds::CLOCK_100KHZ;
         break;
     };
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
@@ -508,7 +518,7 @@ public:
   inline uint8_t getPinSCL() { return _busStatus.pinSCL; };
   inline uint16_t getLastCommand() { return _busStatus.lastCommand; };
   // Bus clock frequency in Hz
-  inline ClockSpeed getBusClock() { return _busStatus.clock; }
+  inline ClockSpeeds getBusClock() { return _busStatus.clock; }
 
   /*
     Flag about successful or erroneous recent operation.
@@ -549,83 +559,13 @@ public:
     location - Location of the error code in a sketch utilized as an error text
     prefix.
       - Data type: String
-      - Default value: none
+      - Default value: empty string
       - Limited range: none
 
     RETURN: Textual wording of an error code
   */
-  inline String getLastErrorTxt(String location = "")
-  {
-    String result = "";
-    // Ignore success code
-    if (_busStatus.lastResult == ResultCodes::SUCCESS)
-    {
-      return result;
-    }
-    result += location.length() ? location + "::" : "";
-    result += "Error: ";
-    switch (_busStatus.lastResult)
-    {
-      // General
-      case ResultCodes::ERROR_ADDRESS:
-        result += "ERROR_ADDRESS";
-        break;
+  String getLastErrorTxt(String location = "");
 
-      case ResultCodes::ERROR_PINS:
-        result += "ERROR_PINS";
-        break;
-
-      case ResultCodes::ERROR_RCV_DATA:
-        result += "ERROR_RCV_DATA";
-        break;
-
-      case ResultCodes::ERROR_POSITION:
-        result += "ERROR_POSITION";
-        break;
-
-      case ResultCodes::ERROR_DEVICE:
-        result += "ERROR_DEVICE";
-        break;
-
-        // Arduino, Esspressif specific
-#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
-      case ResultCodes::ERROR_BUFFER:
-        result += "ERROR_BUFFER";
-        break;
-
-      case ResultCodes::ERROR_NACK_DATA:
-        result += "ERROR_NACK_DATA";
-        break;
-
-      case ResultCodes::ERROR_NACK_OTHER:
-        result += "ERROR_NACK_OTHER";
-        break;
-
-          // Particle specific
-#elif defined(PARTICLE)
-      case ResultCodes::ERROR_BUSY:
-        result += "ERROR_BUSY";
-        break;
-
-      case ResultCodes::ERROR_END:
-        result += "ERROR_END";
-        break;
-
-      case ResultCodes::ERROR_TRANSFER:
-        result += "ERROR_TRANSFER";
-        break;
-
-      case ResultCodes::ERROR_TIMEOUT:
-        result += "ERROR_TIMEOUT";
-        break;
-#endif
-      default:
-        result += "ERROR_UKNOWN";
-        break;
-    }
-    result += " (" + String(_busStatus.lastResult) + ")";
-    return result;
-  }
   /*
     Set delay for waiting after each sending transmission to settle a
     ResultCodes::
@@ -702,7 +642,7 @@ private:
     ResultCodes lastResult; // Result of a recent operation
     uint16_t lastCommand; // Command code recently sent to two-wire bus
     uint8_t address = 255; // Address of the device on two-wire bus
-    ClockSpeed clock; // Clock frequency in Hz
+    ClockSpeeds clock; // Clock frequency in Hz
     bool busStop; // Flag about releasing bus after end of transmission
     uint8_t pinSDA; // Pin for serial data
     uint8_t pinSCL; // Pin for serial clock

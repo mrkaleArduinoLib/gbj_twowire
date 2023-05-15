@@ -32,8 +32,8 @@ The library embraces and provides common methods used at every application worki
 <a id="constants"></a>
 
 ## Constants
-* **ClockSpeed::CLOCK\_100KHZ**: Bus clock speed 100 kHz.
-* **ClockSpeed::CLOCK\_400KHZ**: Bus clock speed 400 kHz.
+* **ClockSpeeds::CLOCK\_100KHZ**: Bus clock speed 100 kHz.
+* **ClockSpeeds::CLOCK\_400KHZ**: Bus clock speed 400 kHz.
 * **ResultCodes::SUCCESS**: Result code for successful processing.
 
 ### Arduino and Espressif errors
@@ -49,12 +49,20 @@ The library embraces and provides common methods used at every application worki
 * **ResultCodes::ERROR\_TRANSFER**: Data byte transfer timeout.
 * **ResultCodes::ERROR\_TIMEOUT**: Data byte transfer succeeded, busy timeout immediately after.
 
-### Common errors
+### Generic errors
 * **ResultCodes::ERROR\_ADDRESS**: Platform specific error code at bad address.
 * **ResultCodes::ERROR\_PINS**: For software defined two-wire bus platforms at bad defined bus pins (<abbr title='General Purpose Input Output'>GPIO</abbr>), usually both are the same.
 * **ResultCodes::ERROR\_RCV\_DATA**: Received data is zero or shorter than expected.
 * **ResultCodes::ERROR\_POSITION**: Wrong position in memory; either 0 or no sufficient space for data storing or retrieving.
 * **ResultCodes::ERROR\_DEVICE**: Wrong device type or other device fault.
+* **ResultCodes::ERROR\_RESET**: Device reset failure.
+* **ResultCodes::ERROR\_FIRMWARE**: Device's firmware reading failure.
+* **ResultCodes::ERROR\_SN**: Device's serial number reading failure.
+* **ResultCodes::ERROR\_MEASURE**: Measuring by a device failure.
+* **ResultCodes::ERROR\_REGISTER**: Device's register operation failure.
+
+The library class comprises in generic error codes all potential error codes from derived classes, i.e., hardware sensors' libraries.
+
 
 ### Referencing constants
 In a sketch the constants can be referenced in following forms:
@@ -138,12 +146,12 @@ Constructor `gbj_twowire()` creates the class instance object and sets some bus 
 * If subclass inherited from this class does not need special constructor or destructor, that class does not need to define constructor and destructor whatsoever.
 
 #### Syntax
-    gbj_twowire(ClockSpeed clockSpeed, uint8_t pinSDA, uint8_t pinSCL)
+    gbj_twowire(ClockSpeeds clockSpeed, uint8_t pinSDA, uint8_t pinSCL)
 
 #### Parameters
 * **clockSpeed**: Initial two-wire bus clock frequency in Hertz.
-  * *Valid values*: ClockSpeed::CLOCK\_100KHZ, ClockSpeed::CLOCK\_400KHZ
-  * *Default value*: ClockSpeed::CLOCK\_100KHZ
+  * *Valid values*: ClockSpeeds::CLOCK\_100KHZ, ClockSpeeds::CLOCK\_400KHZ
+  * *Default value*: ClockSpeeds::CLOCK\_100KHZ
 
 * **pinSDA**: Microcontroller's pin for serial data. It is not a board pin but GPIO number. For hardware two-wire bus platforms it is irrelevant and none of methods utilizes this parameter for such as platforms for communication on the bus. On the other hand, for those platforms the parameters might be utilized for storing some specific attribute in the class instance object.
   * *Valid values*: positive integer
@@ -359,11 +367,11 @@ The particular method sets the corresponding flag whether stop or repeated start
 The method updates the bus clock frequency in the class instance object only. It takes effect at next bus initialization by using method [setAddress()](#setAddress), [busSend()](#busSend), or [busReceive()](#busReceive).
 
 #### Syntax
-    void setBusClock(ClockSpeed clockSpeed)
+    void setBusClock(ClockSpeeds clockSpeed)
 
 #### Parameters
 * **clockSpeed**: Two-wire bus clock frequency in Hertz. If the clock is not from enumeration, it fallbacks to 100 kHz.
-  * *Valid values*: ClockSpeed::CLOCK\_100KHZ, ClockSpeed::CLOCK\_400KHZ
+  * *Valid values*: ClockSpeeds::CLOCK\_100KHZ, ClockSpeeds::CLOCK\_400KHZ
   * *Default value*: none
 
 #### Returns
@@ -510,7 +518,7 @@ Current stopping or repeated start flag.
 The method returns the current bus clock frequency stored in the class instance object in Hertz.
 
 #### Syntax
-    ClockSpeed getBusClock()
+    ClockSpeeds getBusClock()
 
 #### Parameters
 None

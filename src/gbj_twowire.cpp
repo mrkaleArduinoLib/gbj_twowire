@@ -175,3 +175,103 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint16_t command,
   }
   return getLastResult();
 }
+
+String gbj_twowire::getLastErrorTxt(String location)
+{
+  String result = "";
+  result += location.length() ? location + "::" : "";
+  // Ignore success code
+  if (_busStatus.lastResult == ResultCodes::SUCCESS)
+  {
+    result += "SUCCESS";
+    return result;
+  }
+  result += "Error: ";
+  switch (_busStatus.lastResult)
+  {
+    // General
+    case ResultCodes::ERROR_ADDRESS:
+      result += "ERROR_ADDRESS";
+      break;
+
+    case ResultCodes::ERROR_PINS:
+      result += "ERROR_PINS";
+      break;
+
+    case ResultCodes::ERROR_RCV_DATA:
+      result += "ERROR_RCV_DATA";
+      break;
+
+    case ResultCodes::ERROR_POSITION:
+      result += "ERROR_POSITION";
+      break;
+
+    case ResultCodes::ERROR_DEVICE:
+      result += "ERROR_DEVICE";
+      break;
+
+    case ResultCodes::ERROR_RESET:
+      result += "ERROR_RESET";
+      break;
+
+    case ResultCodes::ERROR_FIRMWARE:
+      result += "ERROR_FIRMWARE";
+      break;
+
+    case ResultCodes::ERROR_SN:
+      result += "ERROR_SN";
+      break;
+
+    case ResultCodes::ERROR_MEASURE:
+      result += "ERROR_MEASURE";
+      break;
+
+    case ResultCodes::ERROR_REGISTER:
+      result += "ERROR_REGISTER";
+      break;
+
+      // Arduino, Esspressif specific
+#if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
+    case ResultCodes::ERROR_BUFFER:
+      result += "ERROR_BUFFER";
+      break;
+
+    case ResultCodes::ERROR_NACK_DATA:
+      result += "ERROR_NACK_DATA";
+      break;
+
+    case ResultCodes::ERROR_NACK_OTHER:
+      result += "ERROR_NACK_OTHER";
+      break;
+
+      // Particle specific
+#elif defined(PARTICLE)
+    case ResultCodes::ERROR_BUSY:
+      result += "ERROR_BUSY";
+      break;
+
+    case ResultCodes::ERROR_END:
+      result += "ERROR_END";
+      break;
+
+    case ResultCodes::ERROR_TRANSFER:
+      result += "ERROR_TRANSFER";
+      break;
+
+    case ResultCodes::ERROR_TIMEOUT:
+      result += "ERROR_TIMEOUT";
+      break;
+#endif
+    default:
+      result += "ERROR_UKNOWN";
+      break;
+  }
+  result += " (" + String(_busStatus.lastResult) + ")";
+  // Last command
+  if (_busStatus.lastCommand)
+  {
+    result += ", Command: 0x";
+    result += String(_busStatus.lastCommand, HEX);
+  }
+  return result;
+}

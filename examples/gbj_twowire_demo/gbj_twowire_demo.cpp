@@ -18,10 +18,9 @@
 const byte ADDRESS_DEVICE = 0x23; // Good for BH1750FVI
 // const byte ADDRESS_DEVICE = 0x24;  // Wrong
 gbj_twowire device = gbj_twowire();
-// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_400KHZ);
-// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_100KHZ);
-// gbj_twowire device = gbj_twowire(gbj_twowire::ClockSpeed::CLOCK_100KHZ, D2,
-// D1);
+// gbj_twowire device = gbj_twowire(device.CLOCK_400KHZ);
+// gbj_twowire device = gbj_twowire(device.CLOCK_100KHZ);
+// gbj_twowire device = gbj_twowire(device.CLOCK_100KHZ, D2, D1);
 
 void errorHandler(String location)
 {
