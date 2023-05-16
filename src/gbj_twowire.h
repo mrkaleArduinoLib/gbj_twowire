@@ -158,7 +158,7 @@ public:
     // Check pin duplicity
     if (_busStatus.pinSDA == _busStatus.pinSCL)
     {
-      return setLastResult(ERROR_PINS);
+      return setLastResult(ResultCodes::ERROR_PINS);
     }
     return getLastResult();
   }
@@ -399,8 +399,8 @@ public:
   inline ResultCodes busGeneralReset()
   {
     initBus();
-    beginTransmission(ADDRESS_GENCALL);
-    write(GENCALL_RESET);
+    beginTransmission(AddressRange::ADDRESS_GENCALL);
+    write(GeneralCall::GENCALL_RESET);
     if (setLastResult(static_cast<ResultCodes>(endTransmission(getBusStop()))))
     {
       return getLastResult();
@@ -414,9 +414,10 @@ public:
   {
     setLastResult();
     // Invalid address
-    if (address < ADDRESS_MIN || address > ADDRESS_MAX)
+    if (address < AddressRange::ADDRESS_MIN ||
+        address > AddressRange::ADDRESS_MAX)
     {
-      return setLastResult(ERROR_ADDRESS);
+      return setLastResult(ResultCodes::ERROR_ADDRESS);
     }
     // No address change
     if (address == getAddress())
@@ -430,7 +431,7 @@ public:
 
   inline ResultCodes setAddress(uint8_t address)
   {
-    if (registerAddress(address))
+    if (isError(registerAddress(address)))
     {
       return getLastResult();
     }
@@ -509,11 +510,21 @@ public:
     return _busStatus.lastResult;
   }
   inline uint8_t getAddress() { return _busStatus.address; };
-  inline uint8_t getAddressMin() { return ADDRESS_MIN; }; // Adress limits...
-  inline uint8_t getAddressMax() { return ADDRESS_MAX; };
-  inline uint8_t getAddressMinSpecial() { return ADDRESS_MIN_SPECIAL; };
-  inline uint8_t getAddressMinUsual() { return ADDRESS_MIN_USUAL; };
-  inline uint8_t getAddressMaxUsual() { return ADDRESS_MAX_USUAL; };
+  // Adress limits
+  inline uint8_t getAddressMin() { return AddressRange::ADDRESS_MIN; };
+  inline uint8_t getAddressMax() { return AddressRange::ADDRESS_MAX; };
+  inline uint8_t getAddressMinSpecial()
+  {
+    return AddressRange::ADDRESS_MIN_SPECIAL;
+  };
+  inline uint8_t getAddressMinUsual()
+  {
+    return AddressRange::ADDRESS_MIN_USUAL;
+  };
+  inline uint8_t getAddressMaxUsual()
+  {
+    return AddressRange::ADDRESS_MAX_USUAL;
+  };
   inline uint8_t getPinSDA() { return _busStatus.pinSDA; };
   inline uint8_t getPinSCL() { return _busStatus.pinSCL; };
   inline uint16_t getLastCommand() { return _busStatus.lastCommand; };
@@ -635,8 +646,9 @@ private:
     STREAM_BYTES_VAL = 2,
     // Process all bytes of data stream regardless of their value
     STREAM_BYTES_ALL = 3,
+    // I2C Buffer length adopted from parent library
+    STREAM_BUFFER_LENGTH = BUFFER_LENGTH,
   };
-
   struct BusStatus
   {
     ResultCodes lastResult; // Result of a recent operation
@@ -694,14 +706,16 @@ private:
     uint8_t dataMSB = (data >> 8) & 0xFF;
     switch (getStreamDir())
     {
-      case STREAM_DIR_MSB:
-        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataMSB)
+      case DataStreamProcessing::STREAM_DIR_MSB:
+        if ((getStreamBytes() == DataStreamProcessing::STREAM_BYTES_ALL) ||
+            dataMSB)
           dataBuffer[dataIdx++] = dataMSB;
         dataBuffer[dataIdx++] = dataLSB;
         break;
-      case STREAM_DIR_LSB:
+      case DataStreamProcessing::STREAM_DIR_LSB:
       default:
-        if ((getStreamBytes() == STREAM_BYTES_ALL) || dataLSB)
+        if ((getStreamBytes() == DataStreamProcessing::STREAM_BYTES_ALL) ||
+            dataLSB)
           dataBuffer[dataIdx++] = dataLSB;
         dataBuffer[dataIdx++] = dataMSB;
         break;
@@ -714,12 +728,24 @@ protected:
   inline void setBusRepeat() { setBusStopFlag(false); } // Start repeated
   inline bool getBusStop() { return _busStatus.busStop; }
   inline uint8_t getStreamDir() { return _busStatus.streamDirection; }
-  inline void setStreamDirLSB() { _busStatus.streamDirection = STREAM_DIR_LSB; }
-  inline void setStreamDirMSB() { _busStatus.streamDirection = STREAM_DIR_MSB; }
+  inline void setStreamDirLSB()
+  {
+    _busStatus.streamDirection = DataStreamProcessing::STREAM_DIR_LSB;
+  }
+  inline void setStreamDirMSB()
+  {
+    _busStatus.streamDirection = DataStreamProcessing::STREAM_DIR_MSB;
+  }
   inline void setStreamDirDft() { setStreamDirMSB(); }
   inline uint8_t getStreamBytes() { return _busStatus.streamBytes; }
-  inline void setStreamBytesVal() { _busStatus.streamBytes = STREAM_BYTES_VAL; }
-  inline void setStreamBytesAll() { _busStatus.streamBytes = STREAM_BYTES_ALL; }
+  inline void setStreamBytesVal()
+  {
+    _busStatus.streamBytes = DataStreamProcessing::STREAM_BYTES_VAL;
+  }
+  inline void setStreamBytesAll()
+  {
+    _busStatus.streamBytes = DataStreamProcessing::STREAM_BYTES_ALL;
+  }
   inline void setStreamBytesDft() { setStreamBytesVal(); }
   inline void setTimestampSend(uint32_t timestamp = millis())
   {

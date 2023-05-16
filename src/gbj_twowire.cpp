@@ -15,7 +15,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStream(uint8_t *dataBuffer,
   waitTimestampSend();
   while (dataLen)
   {
-    uint8_t pageLen = BUFFER_LENGTH;
+    uint8_t pageLen = DataStreamProcessing::STREAM_BUFFER_LENGTH;
     beginTransmission(getAddress());
     while (pageLen > 0 && dataLen > 0)
     {
@@ -70,7 +70,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer,
   waitTimestampSend();
   while (dataLen)
   {
-    uint8_t pageLen = BUFFER_LENGTH;
+    uint8_t pageLen = DataStreamProcessing::STREAM_BUFFER_LENGTH;
     beginTransmission(getAddress());
     // Injected prefix stream in every page
     if (prfxExec)
@@ -133,13 +133,14 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
   waitTimestampReceive();
   while (dataLen)
   {
-    uint8_t pageLen = min(dataLen, BUFFER_LENGTH);
+    uint8_t pageLen = min(dataLen, DataStreamProcessing::STREAM_BUFFER_LENGTH);
     // Return original flag before last page
     if (pageLen >= dataLen)
     {
       setBusStopFlag(origBusStop);
     }
-    if (requestFrom(getAddress(), pageLen, (uint8_t)getBusStop()) > 0 &&
+    if (requestFrom(getAddress(), pageLen, static_cast<uint8_t>(getBusStop())) >
+          0 &&
         available() >= pageLen)
     {
       for (uint8_t i = 0; i < pageLen; i++)
@@ -149,7 +150,7 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
     }
     else
     {
-      return setLastResult(ERROR_RCV_DATA);
+      return setLastResult(ResultCodes::ERROR_RCV_DATA);
     }
     dataLen -= pageLen;
   }
