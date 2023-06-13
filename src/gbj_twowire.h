@@ -298,16 +298,16 @@ public:
     transmission.
     - The method is overloaded.
     - In case of two parameters, the first one is considered as a command and
-      second one as the data. In this case the method sends 2 ~ 4 bytes to the
-    bus in one transmission.
-    - In case of one parameter, it is considered as the general data and in fact
-      might be a command or the data. In this case the method sends 1 ~ 2 bytes
-      to the bus in one transmission.
+    second one as the data. In this case the method sends 2 ~ 4 bytes to the bus
+    in one transmission.
+    - In case of one parameter, it is considered as a command, but it can be the
+    general data. In this case the method sends 1 ~ 2 bytes to the bus in one
+    transmission.
     - If the most significant byte (MSB - the first one from the left) of either
-      parameter is non-zero, the data is written as two subsequent bytes with
-    MSB first.
+    parameter is non-zero, the data is written as two subsequent bytes with MSB
+    first.
     - If the MSB of either parameter is zero, the data is written as just its
-      Least significant byte (LSB).
+    Least significant byte (LSB).
 
     PARAMETERS:
     command - Word or byte to be sent in the role of command.
@@ -322,16 +322,12 @@ public:
 
     RETURN: Result code
   */
-  inline ResultCodes busSend(uint16_t data)
+  inline ResultCodes busSend(uint16_t command)
   {
     uint8_t dataBuffer[2];
     uint16_t dataLen = 0;
-    bufferData(dataBuffer, dataLen, data);
-    if (busSendStream(dataBuffer, dataLen))
-    {
-      return getLastResult();
-    }
-    return getLastResult();
+    bufferData(dataBuffer, dataLen, setLastCommand(command));
+    return busSendStream(dataBuffer, dataLen);
   }
 
   inline ResultCodes busSend(uint16_t command, uint16_t data)
@@ -340,11 +336,7 @@ public:
     uint16_t dataLen = 0;
     bufferData(dataBuffer, dataLen, setLastCommand(command));
     bufferData(dataBuffer, dataLen, data);
-    if (busSendStream(dataBuffer, dataLen))
-    {
-      return getLastResult();
-    }
-    return getLastResult();
+    return busSendStream(dataBuffer, dataLen);
   }
 
   /*
@@ -588,9 +580,9 @@ public:
 
     PARAMETERS:
     delay - Delaying time period in milliseconds.
-            - Data type: non-negative integer
-            - Default value: none
-            - Limited range: 0 ~ 2^32 - 1
+      - Data type: non-negative integer
+      - Default value: none
+      - Limited range: 0 ~ 2^32 - 1
 
     RETURN: none
   */
@@ -607,9 +599,9 @@ public:
 
     PARAMETERS:
     delay - Delaying time period in milliseconds.
-            - Data type: non-negative integer
-            - Default value: none
-            - Limited range: 0 ~ 2^32 - 1
+      - Data type: non-negative integer
+      - Default value: none
+      - Limited range: 0 ~ 2^32 - 1
 
     RETURN: none
   */
@@ -725,7 +717,7 @@ private:
 protected:
   inline void setBusStopFlag(bool busStop) { _busStatus.busStop = busStop; }
   inline void setBusStop() { setBusStopFlag(true); }
-  inline void setBusRepeat() { setBusStopFlag(false); } // Start repeated
+  inline void setBusRepeat() { setBusStopFlag(false); }
   inline bool getBusStop() { return _busStatus.busStop; }
   inline uint8_t getStreamDir() { return _busStatus.streamDirection; }
   inline void setStreamDirLSB()

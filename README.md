@@ -754,11 +754,11 @@ Some of [result or error codes](#constants).
 The method sends input data to the two-wire bus as one communication transmission.
 * The method is overloaded.
 * In case of two parameters, the first one is considered as a command and second one as the data. In this case the method sends 2 ~ 4 bytes to the bus in one transmission.
-* In case of one parameter, it is considered as the general data and in fact might be a command or the data. In this case the method sends 1 ~ 2 bytes to the bus in one transmission.
+* In case of one parameter, it is considered as a command, but it can be the general data. In this case the method sends 1 ~ 2 bytes to the bus in one transmission.
 
 #### Syntax
     ResultCodes busSend(uint16_t command, uint16_t data)
-    ResultCodes busSend(uint16_t data)
+    ResultCodes busSend(uint16_t command)
 
 #### Parameters
 * **command**: Word or byte to be sent in the role of command.
