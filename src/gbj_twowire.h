@@ -397,7 +397,7 @@ public:
     {
       return getLastResult();
     }
-    setTimestampSend();
+    setTimestamp();
     return getLastResult();
   }
 
@@ -570,12 +570,11 @@ public:
   String getLastErrorTxt(String location = "");
 
   /*
-    Set delay for waiting after each sending transmission to settle a
-    ResultCodes::
+    Set delay for waiting before each sending transmission.
 
     DESCRIPTION:
     If a delay value is set, than the library waits before subsequent sending
-    transmission until that time period expires from finishing previous sending
+    transmission until that time period expires from finishing previous
     transmission.
 
     PARAMETERS:
@@ -590,12 +589,12 @@ public:
   inline uint32_t getDelaySend() { return _busStatus.sendDelay; }
 
   /*
-    Set delay for waiting after each receiving transmission to settle a device.
+    Set delay for waiting before each receiving transmission.
 
     DESCRIPTION:
     If a delay value is set, than the library waits before subsequent receiving
     transmission until that time period expires from finishing previous
-    receiving transmission.
+    transmission.
 
     PARAMETERS:
     delay - Delaying time period in milliseconds.
@@ -653,9 +652,8 @@ private:
     uint8_t streamDirection; // Mode of data stream processing
     uint8_t streamBytes; // Mode of data stream bytes processing
     uint32_t sendDelay = 0; // Waiting after each sent page
-    uint32_t sendTimestamp = 0; // Recent bus send timestamp
     uint32_t receiveDelay = 0; // Waiting after each received page
-    uint32_t receiveTimestamp = 0; // Recent bus receive timestamp
+    uint32_t transTimestamp = 0; // Recent bus transmission timestamp
 #if defined(__AVR__) || defined(ESP8266) || defined(ESP32)
     bool busEnabled; // Flag about bus initialization
 #endif
@@ -701,14 +699,18 @@ private:
       case DataStreamProcessing::STREAM_DIR_MSB:
         if ((getStreamBytes() == DataStreamProcessing::STREAM_BYTES_ALL) ||
             dataMSB)
+        {
           dataBuffer[dataIdx++] = dataMSB;
+        }
         dataBuffer[dataIdx++] = dataLSB;
         break;
       case DataStreamProcessing::STREAM_DIR_LSB:
       default:
         if ((getStreamBytes() == DataStreamProcessing::STREAM_BYTES_ALL) ||
             dataLSB)
+        {
           dataBuffer[dataIdx++] = dataLSB;
+        }
         dataBuffer[dataIdx++] = dataMSB;
         break;
     }
@@ -739,26 +741,21 @@ protected:
     _busStatus.streamBytes = DataStreamProcessing::STREAM_BYTES_ALL;
   }
   inline void setStreamBytesDft() { setStreamBytesVal(); }
-  inline void setTimestampSend(uint32_t timestamp = millis())
+  inline void setTimestamp(uint32_t timestamp = millis())
   {
-    _busStatus.sendTimestamp = timestamp;
+    _busStatus.transTimestamp = timestamp;
   }
-  inline uint32_t getTimestampSend() { return _busStatus.sendTimestamp; }
+  inline uint32_t getTimestamp() { return _busStatus.transTimestamp; }
   inline void waitTimestampSend()
   {
-    while (millis() - _busStatus.sendTimestamp < getDelaySend())
+    while (millis() - _busStatus.transTimestamp < getDelaySend())
       ;
-  }
-  inline void setTimestampReceive(uint32_t timestamp = millis())
-  {
-    _busStatus.receiveTimestamp = timestamp;
   }
   inline void waitTimestampReceive()
   {
-    while (millis() - _busStatus.receiveTimestamp < getDelayReceive())
+    while (millis() - _busStatus.transTimestamp < getDelayReceive())
       ;
   }
-  inline uint32_t getTimestampReceive() { return _busStatus.receiveTimestamp; }
   /*
     Wait for a period of time.
 

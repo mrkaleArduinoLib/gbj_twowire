@@ -124,12 +124,8 @@ setup()
 * [getBusStop()](#getBusStop)
 * [getDelaySend()](#getDelay)
 * [getDelayReceive()](#getDelay)
-* [setTimestampSend()](#setTimestamp)
-* [setTimestampReceive()](#setTimestamp)
-* [resetTimestampSend()](#setTimestamp)
-* [resetTimestampReceive()](#setTimestamp)
-* [getTimestampSend()](#getTimestamp)
-* [getTimestampReceive()](#getTimestamp)
+* [setTimestamp()](#setTimestamp)
+* [getTimestamp()](#getTimestamp)
 * [waitTimestampSend()](#waitTimestamp)
 * [waitTimestampReceive()](#waitTimestamp)
 * [wait()](#wait)
@@ -906,16 +902,13 @@ Particular current delay in milliseconds.
 
 <a id="setTimestamp"></a>
 
-## setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()
+## setTimestamp()
 
 #### Description
-The particular method sets or erases internal timestamp of finishing every either sending or receiving communication transmission on the two-wire bus to the current running time of the microcontroller in milliseconds with the function `millis()`.
+The method sets or erases internal timestamp of just finished communication transmission on the two-wire bus to the current running time of the microcontroller in milliseconds with the function `millis()`.
 
 #### Syntax
-    void setTimestampSend()
-    void resetTimestampSend()
-    void setTimestampReceive()
-    void resetTimestampReceive()
+    void setTimestamp()
 
 #### Parameters
 None
@@ -947,7 +940,7 @@ None
 None
 
 #### See also
-[setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()](#setTimestamp)
+[setTimestamp()](#setTimestamp)
 
 [wait()](#wait)
 
@@ -956,23 +949,22 @@ None
 
 <a id="getTimestamp"></a>
 
-## getTimestampSend(), getTimestampReceive()
+## getTimestamp()
 
 #### Description
-The particular method returns recently saved internal sending or receiving timestamp.
+The method returns recently internally saved timestamp of a recent transmission.
 
 #### Syntax
-    uint32_t getTimestampSend()
-    uint32_t getTimestampReceive()
+    uint32_t getTimestamp()
 
 #### Parameters
 None
 
 #### Returns
-Timestamp of finishing of the recent sending or receiving communication transmission on the two-wire bus.
+Timestamp of the recent finishedcommunication transmission on the two-wire bus.
 
 #### See also
-[setTimestampSend(), resetTimestampSend(), setTimestampReceive(), resetTimestampReceive()](#setTimestamp)
+[setTimestamp()](#setTimestamp)
 
 [wait()](#wait)
 

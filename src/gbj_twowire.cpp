@@ -40,7 +40,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStream(uint8_t *dataBuffer,
       return getLastResult();
     }
   }
-  setTimestampSend();
+  setTimestamp();
   setBusStopFlag(origBusStop);
   return getLastResult();
 }
@@ -119,7 +119,7 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer,
       return getLastResult();
     }
   }
-  setTimestampSend();
+  setTimestamp();
   setBusStopFlag(origBusStop);
   return getLastResult();
 }
@@ -154,7 +154,7 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
     }
     dataLen -= pageLen;
   }
-  setTimestampReceive();
+  setTimestamp();
   setBusStopFlag(origBusStop);
   return getLastResult();
 }
