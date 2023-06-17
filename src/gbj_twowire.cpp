@@ -125,11 +125,17 @@ gbj_twowire::ResultCodes gbj_twowire::busSendStreamPrefixed(uint8_t *dataBuffer,
 }
 
 gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
-                                                 uint16_t dataLen)
+                                                 uint16_t dataLen,
+                                                 bool dataReverse)
 {
   bool origBusStop = getBusStop();
   setLastResult();
   setBusRepeat();
+  if (dataReverse)
+  {
+    dataBuffer += dataLen;
+    dataBuffer--;
+  }
   waitTimestampReceive();
   while (dataLen)
   {
@@ -145,7 +151,14 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
     {
       for (uint8_t i = 0; i < pageLen; i++)
       {
-        *dataBuffer++ = read();
+        if (dataReverse)
+        {
+          *dataBuffer-- = read();
+        }
+        else
+        {
+          *dataBuffer++ = read();
+        }
       }
     }
     else
@@ -161,7 +174,8 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint8_t *dataBuffer,
 
 gbj_twowire::ResultCodes gbj_twowire::busReceive(uint16_t command,
                                                  uint8_t *dataBuffer,
-                                                 uint16_t dataLen)
+                                                 uint16_t dataLen,
+                                                 bool dataReverse)
 {
   bool origBusStop = getBusStop();
   setBusRepeat();
@@ -170,7 +184,7 @@ gbj_twowire::ResultCodes gbj_twowire::busReceive(uint16_t command,
     return getLastResult();
   }
   setBusStopFlag(origBusStop);
-  if (busReceive(dataBuffer, dataLen))
+  if (busReceive(dataBuffer, dataLen, dataReverse))
   {
     return getLastResult();
   }

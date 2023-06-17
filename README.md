@@ -785,8 +785,8 @@ The method reads a byte stream from the two-wire bus chunked by parent library t
 * In case of 2 parameter, the method just reads to the buffer from the bus.
 
 #### Syntax
-    ResultCodes busReceive(uint16_t command, uint8_t *dataBuffer, uint16_t dataLen)
-    ResultCodes busReceive(uint8_t *dataBuffer, uint16_t dataLen)
+    ResultCodes busReceive(uint16_t command, uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse)
+    ResultCodes busReceive(uint8_t *dataBuffer, uint16_t dataLen, bool dataReverse)
 
 #### Parameters
 * **command**: Word or byte to be sent to the two-wire bus in the role of command.
@@ -804,11 +804,17 @@ The method reads a byte stream from the two-wire bus chunked by parent library t
 #### Returns
 Some of [result or error codes](#constants).
 
+* **dataReverse**: Flag about receiving to data buffer in reverse order from very last byte (determined by *dataLen*) to the very first byte.
+  * *Valid values*: Boolean
+    * *false*: receiving from the first to the last byte order
+    * *true*: receiving from the last to the first byte order
+  * *Default value*: false
+
 #### Example
 ```cpp
 gbj_twowire object = gbj_twowire();
 uint8_t data[2];
-if (object.busReceive(data, sizeof(data)/sizeof(data[0])))
+if (object.busReceive(data, sizeof(data)/sizeof(data[0]), false))
 {
   Serial.println("Data:");
   Serial.println(data[0]);

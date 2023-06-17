@@ -369,12 +369,23 @@ public:
       - Default value: none
       - Limited range: 0 ~ 65535
 
+    dataReverse - Flag about receiving to the data buffer in reverse order from
+    very last byte (determined by dataLen) to the very first byte.
+      - Data type: boolean
+      - Default value: false
+      - Limited range:
+        false: receiving from the first to the last byte order
+        true: receiving from the last to the first byte order
+
     RETURN: Result code
   */
-  ResultCodes busReceive(uint8_t *dataBuffer, uint16_t dataLen);
+  ResultCodes busReceive(uint8_t *dataBuffer,
+                         uint16_t dataLen,
+                         bool dataReverse = false);
   ResultCodes busReceive(uint16_t command,
                          uint8_t *dataBuffer,
-                         uint16_t dataLen);
+                         uint16_t dataLen,
+                         bool dataReverse = false);
 
   /*
     Send software reset command to general call address.
