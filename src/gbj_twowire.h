@@ -37,6 +37,7 @@
 class gbj_twowire : public TwoWire
 {
 public:
+  const bool REVERSE = true;
   enum ResultCodes : uint8_t
   {
     SUCCESS = 0,
