@@ -103,7 +103,7 @@ public:
     PARAMETERS:
     clockSpeed - Initial two-wire bus clock frequency in Hertz. If the clock is
     not from enumeration, it fallbacks to 100 kHz.
-      - Data type: long
+      - Data type: ClockSpeeds
       - Default value: CLOCK_100KHZ
       - Limited range: CLOCK_100KHZ, CLOCK_400KHZ
 
