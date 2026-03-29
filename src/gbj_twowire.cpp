@@ -196,13 +196,13 @@ String gbj_twowire::getLastErrorTxt(String location)
   String result = "";
   result += location.length() ? location + "::" : "";
   // Ignore success code
-  if (_busStatus.lastResult == ResultCodes::SUCCESS)
+  if (busStatus_.lastResult == ResultCodes::SUCCESS)
   {
     result += "SUCCESS";
     return result;
   }
   result += "Error: ";
-  switch (_busStatus.lastResult)
+  switch (busStatus_.lastResult)
   {
     // General
     case ResultCodes::ERROR_ADDRESS:
@@ -281,12 +281,12 @@ String gbj_twowire::getLastErrorTxt(String location)
       result += "ERROR_UKNOWN";
       break;
   }
-  result += " (" + String(_busStatus.lastResult) + ")";
+  result += " (" + String(busStatus_.lastResult) + ")";
   // Last command
-  if (_busStatus.lastCommand)
+  if (busStatus_.lastCommand)
   {
     result += ", Command: 0x";
-    result += String(_busStatus.lastCommand, HEX);
+    result += String(busStatus_.lastCommand, HEX);
   }
   return result;
 }

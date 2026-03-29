@@ -1,5 +1,5 @@
 # gbjTwoWire
-The library embraces and provides common methods used at every application working with sensor on `two-wire` (also known as <abbr title='Inter-Integrated Circuit'>I2C</abbr>) bus.
+The library embraces and provides common methods used at every application working with sensors on `two-wire` (also known as <abbr title='Inter-Integrated Circuit'>I2C</abbr>) bus.
 
 * Library specifies (inherits from) the system `TwoWire` library from the file `Wire.h`.
 * The class from the library is not intended to be used directly in a sketch, just as a parent class for specific sensor libraries.
@@ -7,7 +7,7 @@ The library embraces and provides common methods used at every application worki
 * Library implements extended error handling.
 * Library provides some general system methods implemented differently for various platforms, especially for ones with hardware two-wire bus implementation (Arduino, Particle - Photon, Electron...) and for ones with software (bit-banged) defined two-wire bus (Espressif - ESP8266, ESP32).
 * Library initiates the two-wire bus at the default speed (serial clock) `100 kHz` and with generating stop condition after every end of transmission or data request, but they can be changed dynamically.
-* It is expected, that initialization of a device and setting its parameters is provided in a child bclass inherited from this class defined in that library in the method `begin`.
+* It is expected, that initialization of a device and setting its parameters is provided in a child class inherited from this class defined in that library in the method `begin`.
 * Library does not use the built-in function `delay()` at waiting for some actions, e.g., waking up sensor from power down mode, but instead of it uses the own implementation of the `wait()` function based on system `millis()` function.
 * Library allows address range `0x00 ~ 0x7F`.
 * Library utilizes the general call on the two-wire bus as well.
@@ -104,7 +104,7 @@ setup()
 #### Getters
 * [getLastResult()](#getLastResult)
 * [getLastErrorTxt()](#getLastErrorTxt)
-* [getLastCommand()](#getLastResult)
+* [getLastCommand()](#getLastCommand)
 * [getAddress()](#getAddress)
 * [getAddressMin()](#getAddressLimits)
 * [getAddressMinSpecial()](#getAddressLimits)
@@ -220,8 +220,8 @@ None
 
 #### Description
 The method returns a flag whether the recent operation on the two-wire bus was successful.
-- The method is overloaded. If the input argument is used, it is used and internally saved instead of recently saved code.
-- The method with input argument is useful for calling inline method or function returning the code.
+- The overload without argument evaluates the internally stored result code.
+- The overload with argument evaluates the provided result code directly without modifying internal state. It is useful for evaluating return values of inline methods directly in conditional expressions.
 
 #### Syntax
     boolean isSuccess()
@@ -249,8 +249,8 @@ Flag about successful processing of the recent operation on the bus.
 
 #### Description
 The method returns a flag whether the recent operation on the two-wire bus failed. The corresponding error code can be obtained by the method [getLastResult()](#getLastResult), which is one of error [constants](#constants).
-- The method is overloaded. If the input argument is used, it is used and internally saved instead of recently saved code.
-- The method with input argument is useful for calling inline method or function returning the code.
+- The overload without argument evaluates the internally stored result code.
+- The overload with argument evaluates the provided result code directly without modifying internal state. It is useful for evaluating return values of inline methods directly in conditional expressions.
 
 #### Syntax
     boolean isError()
@@ -525,7 +525,7 @@ Current two-wire bus clock frequency in Hertz.
 #### See also
 [gbj_twowire](#gbj_twowire)
 
-[setBusClock()](#setBusStop)
+[setBusClock()](#setBusClock)
 
 [Back to interface](#interface)
 
@@ -857,7 +857,7 @@ Some of [result or error codes](#constants).
 ## setDelaySend(), setDelayReceive()
 
 #### Description
-The particular method sets delay for waiting before subsequent sending or receving transmission until that time period expires from finishing that previous transmission.
+The particular method sets delay for waiting before subsequent sending or receiving transmission until that time period expires from finishing that previous transmission.
 * In order not to block system, the method does not wait after a transmission, but before transmissions for delay expiring. It gives the system a chance to perform some tasks after communication on the bus, which might last the desired delay, so that the method does not block the system uselessly.
 * In order to reset the delay, put 0 to input argument.
 
@@ -933,7 +933,8 @@ None
 ## waitTimestampSend(), waitTimestampReceive()
 
 #### Description
-The particular method waits until current running time of the microcontroller reaches internal sending or receiving timestamp. * The method enables sensors to settle after changing their status.
+The particular method waits until current running time of the microcontroller reaches internal sending or receiving timestamp.
+* The method enables sensors to settle after changing their status.
 
 #### Syntax
     void waitTimestampSend()
@@ -967,7 +968,7 @@ The method returns recently internally saved timestamp of a recent transmission.
 None
 
 #### Returns
-Timestamp of the recent finishedcommunication transmission on the two-wire bus.
+Timestamp of the recent finished communication transmission on the two-wire bus.
 
 #### See also
 [setTimestamp()](#setTimestamp)
